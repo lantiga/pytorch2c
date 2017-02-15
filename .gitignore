@@ -1,0 +1,6 @@
+.DS_Store
+out/
+__pycache__
+*.pyc
+NOTES.md
+foo*
