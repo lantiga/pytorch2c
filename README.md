@@ -5,7 +5,7 @@ A Python module for compiling (static) PyTorch graphs to C (relying on TH and TH
 PyTorch2c inspects the computation graph and emits C code that performs the same computation. As long as a network is static (i.e. the graph doesn't change dynamically) it should produce a C source file that links to TH and THNN and can be compiled stand-alone. Interestingly, compiled graphs can be tested automatically by comparing what PyTorch produces to what the compiled code produces, given the same input.
 
 Caveats: 
-* things are not working just yet
+* things are not working just yet (the feedforward test does, the mnist test doesn't);
 * things are guaranteed to change in the PyTorch graph dept. Hopefully we'll be able to catch up with the changes as they happen.
 
 Feel free to get in touch, just to say hi or let me know you're horrified.
