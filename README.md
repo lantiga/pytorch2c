@@ -15,20 +15,23 @@ Feel free to get in touch, just to say hi or let me know you're horrified.
 
 ## TODO
 
-* [ ] Solve storage serialization issues
+* [x] Solve storage serialization issues
 * [ ] Complete testing infrastructure (generate a number of input-output pairs)
-* [ ] Generate CMakeLists.txt as part of output
-* [ ] Implement wrappers for the complete API
+* [x] Generate CMakeLists.txt as part of output for tests
+* [ ] Implement wrappers for the complete API (big one)
 
 ## Trying things out
 
-* [Install PyTorch](http://pytorch.org)
 * Clone the repository and `cd pytorch2c`
-* Run a test, e.g. `python test/mnist.py` and find the output under the `out` directory
+* `sh scripts/get_deps.sh`
+* `sh scripts/build_deps.sh`
+* `sh scripts/run_test.sh feedforward`
+
+To see the output, look into the `out` directory.
 
 BTW, I'm developing on macOS and Python 3.5. 
 
-In a nutshell
+Example on a simple feedforward network:
 ```python
 import torch
 from torch.autograd import Variable
@@ -37,275 +40,134 @@ import torch.nn.functional as F
 
 import torch2c
 
-# define the network as in the pytorch example
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
-        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
-        self.conv2_drop = nn.Dropout2d()
-        self.fc1 = nn.Linear(320, 50)
-        self.fc2 = nn.Linear(50, 10)
+# define the network
+import torch.nn as nn
+import torch.nn.functional as F
 
-    def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
-        x = x.view(-1, 320)
-        #x = x.view(-1, 120)
-        x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
-        x = F.relu(self.fc2(x))
-        return F.log_softmax(x)
+fc1 = nn.Linear(10,20)
+fc1.weight.data.normal_(0.0,1.0)
+fc1.bias.data.normal_(0.0,1.0)
 
-model = Net()
+fc2 = nn.Linear(20,2)
+fc2.weight.data.normal_(0.0,1.0)
+fc2.bias.data.normal_(0.0,1.0)
+
+model = lambda x: F.log_softmax(fc2(F.relu(fc1(x))))
 
 # create an input variable
-data = Variable(torch.FloatTensor(1,1,28,28))
+data = Variable(torch.rand(10,10))
 
-# compile it
-torch2c.compile(model(data),'mnist_forward','out',compile_test=True)
+# compile the graph and the test
+torch2c.compile(model(data),'feedforward',out_path,compile_test=True)
 ```
 
 Generated output (don't look at the ugly storage reading stuff for now):
 ```C
-#ifndef __MNIST_FORWARD__
-#define __MNIST_FORWARD__
+#ifndef __FEEDFORWARD__
+#define __FEEDFORWARD__
 
 #include "TH.h"
 #include "THNN.h"
 
-void mnist_forward(THFloatTensor *x_4542158016, THFloatTensor *x_4542160720)
+void feedforward(THFloatTensor *x_4510941984, THFloatTensor *x_4510944688)
 {
-  THFloatStorage *storage_x_4542157912 = THFloatStorage_newWithSize1(10);
+  THFloatStorage *storage_x_4510941880 = THFloatStorage_newWithSize(2);
   {
-  FILE *f = fopen("data/x_4542157912.th","rb");
+  FILE *f = fopen("data/x_4510941880.th","rb");
   if (!f) {
-  THError("cannot open file data/x_4542157912.th for reading");
+  THError("cannot open file data/x_4510941880.th for reading");
   }
   long size;
   size_t result = fread(&size,sizeof(long),1,f);
-  char *bytes = (char *) storage_x_4542157912->data;
-  uint64_t remaining = sizeof(float) * storage_x_4542157912->size;
-  result = fread(bytes,sizeof(float),storage_x_4542157912->size,f);
+  char *bytes = (char *) storage_x_4510941880->data;
+  uint64_t remaining = sizeof(float) * storage_x_4510941880->size;
+  result = fread(bytes,sizeof(float),storage_x_4510941880->size,f);
   fclose(f);
   }
-  THLongStorage *size_x_4542157912 = THLongStorage_newWithSize1(10);
-  THLongStorage *stride_x_4542157912 = THLongStorage_newWithSize1(1);
-  THFloatTensor *x_4542157912 = THFloatTensor_newWithStorage(storage_x_4542157912,0,size_x_4542157912,stride_x_4542157912);
-  THLongStorage_free(size_x_4542157912);
-  THLongStorage_free(stride_x_4542157912);
-  THFloatStorage *storage_x_4542157808 = THFloatStorage_newWithSize1(500);
+  THLongStorage *size_x_4510941880 = THLongStorage_newWithSize1(2);
+  THLongStorage *stride_x_4510941880 = THLongStorage_newWithSize1(1);
+  THFloatTensor *x_4510941880 = THFloatTensor_newWithStorage(storage_x_4510941880,0,size_x_4510941880,stride_x_4510941880);
+  THLongStorage_free(size_x_4510941880);
+  THLongStorage_free(stride_x_4510941880);
+  THFloatStorage *storage_x_4510941776 = THFloatStorage_newWithSize(40);
   {
-  FILE *f = fopen("data/x_4542157808.th","rb");
+  FILE *f = fopen("data/x_4510941776.th","rb");
   if (!f) {
-  THError("cannot open file data/x_4542157808.th for reading");
+  THError("cannot open file data/x_4510941776.th for reading");
   }
   long size;
   size_t result = fread(&size,sizeof(long),1,f);
-  char *bytes = (char *) storage_x_4542157808->data;
-  uint64_t remaining = sizeof(float) * storage_x_4542157808->size;
-  result = fread(bytes,sizeof(float),storage_x_4542157808->size,f);
+  char *bytes = (char *) storage_x_4510941776->data;
+  uint64_t remaining = sizeof(float) * storage_x_4510941776->size;
+  result = fread(bytes,sizeof(float),storage_x_4510941776->size,f);
   fclose(f);
   }
-  THLongStorage *size_x_4542157808 = THLongStorage_newWithSize2(10,50);
-  THLongStorage *stride_x_4542157808 = THLongStorage_newWithSize2(50,1);
-  THFloatTensor *x_4542157808 = THFloatTensor_newWithStorage(storage_x_4542157808,0,size_x_4542157808,stride_x_4542157808);
-  THLongStorage_free(size_x_4542157808);
-  THLongStorage_free(stride_x_4542157808);
-  THFloatStorage *storage_x_4542157704 = THFloatStorage_newWithSize1(50);
+  THLongStorage *size_x_4510941776 = THLongStorage_newWithSize2(2,20);
+  THLongStorage *stride_x_4510941776 = THLongStorage_newWithSize2(20,1);
+  THFloatTensor *x_4510941776 = THFloatTensor_newWithStorage(storage_x_4510941776,0,size_x_4510941776,stride_x_4510941776);
+  THLongStorage_free(size_x_4510941776);
+  THLongStorage_free(stride_x_4510941776);
+  THFloatStorage *storage_x_4510941672 = THFloatStorage_newWithSize(20);
   {
-  FILE *f = fopen("data/x_4542157704.th","rb");
+  FILE *f = fopen("data/x_4510941672.th","rb");
   if (!f) {
-  THError("cannot open file data/x_4542157704.th for reading");
+  THError("cannot open file data/x_4510941672.th for reading");
   }
   long size;
   size_t result = fread(&size,sizeof(long),1,f);
-  char *bytes = (char *) storage_x_4542157704->data;
-  uint64_t remaining = sizeof(float) * storage_x_4542157704->size;
-  result = fread(bytes,sizeof(float),storage_x_4542157704->size,f);
+  char *bytes = (char *) storage_x_4510941672->data;
+  uint64_t remaining = sizeof(float) * storage_x_4510941672->size;
+  result = fread(bytes,sizeof(float),storage_x_4510941672->size,f);
   fclose(f);
   }
-  THLongStorage *size_x_4542157704 = THLongStorage_newWithSize1(50);
-  THLongStorage *stride_x_4542157704 = THLongStorage_newWithSize1(1);
-  THFloatTensor *x_4542157704 = THFloatTensor_newWithStorage(storage_x_4542157704,0,size_x_4542157704,stride_x_4542157704);
-  THLongStorage_free(size_x_4542157704);
-  THLongStorage_free(stride_x_4542157704);
-  THFloatStorage *storage_x_4542157600 = THFloatStorage_newWithSize1(16000);
+  THLongStorage *size_x_4510941672 = THLongStorage_newWithSize1(20);
+  THLongStorage *stride_x_4510941672 = THLongStorage_newWithSize1(1);
+  THFloatTensor *x_4510941672 = THFloatTensor_newWithStorage(storage_x_4510941672,0,size_x_4510941672,stride_x_4510941672);
+  THLongStorage_free(size_x_4510941672);
+  THLongStorage_free(stride_x_4510941672);
+  THFloatStorage *storage_x_4510941568 = THFloatStorage_newWithSize(200);
   {
-  FILE *f = fopen("data/x_4542157600.th","rb");
+  FILE *f = fopen("data/x_4510941568.th","rb");
   if (!f) {
-  THError("cannot open file data/x_4542157600.th for reading");
+  THError("cannot open file data/x_4510941568.th for reading");
   }
   long size;
   size_t result = fread(&size,sizeof(long),1,f);
-  char *bytes = (char *) storage_x_4542157600->data;
-  uint64_t remaining = sizeof(float) * storage_x_4542157600->size;
-  result = fread(bytes,sizeof(float),storage_x_4542157600->size,f);
+  char *bytes = (char *) storage_x_4510941568->data;
+  uint64_t remaining = sizeof(float) * storage_x_4510941568->size;
+  result = fread(bytes,sizeof(float),storage_x_4510941568->size,f);
   fclose(f);
   }
-  THLongStorage *size_x_4542157600 = THLongStorage_newWithSize2(50,320);
-  THLongStorage *stride_x_4542157600 = THLongStorage_newWithSize2(320,1);
-  THFloatTensor *x_4542157600 = THFloatTensor_newWithStorage(storage_x_4542157600,0,size_x_4542157600,stride_x_4542157600);
-  THLongStorage_free(size_x_4542157600);
-  THLongStorage_free(stride_x_4542157600);
-  THFloatStorage *storage_x_4542157496 = THFloatStorage_newWithSize1(20);
-  {
-  FILE *f = fopen("data/x_4542157496.th","rb");
-  if (!f) {
-  THError("cannot open file data/x_4542157496.th for reading");
-  }
-  long size;
-  size_t result = fread(&size,sizeof(long),1,f);
-  char *bytes = (char *) storage_x_4542157496->data;
-  uint64_t remaining = sizeof(float) * storage_x_4542157496->size;
-  result = fread(bytes,sizeof(float),storage_x_4542157496->size,f);
-  fclose(f);
-  }
-  THLongStorage *size_x_4542157496 = THLongStorage_newWithSize1(20);
-  THLongStorage *stride_x_4542157496 = THLongStorage_newWithSize1(1);
-  THFloatTensor *x_4542157496 = THFloatTensor_newWithStorage(storage_x_4542157496,0,size_x_4542157496,stride_x_4542157496);
-  THLongStorage_free(size_x_4542157496);
-  THLongStorage_free(stride_x_4542157496);
-  THFloatStorage *storage_x_4542157392 = THFloatStorage_newWithSize1(5000);
-  {
-  FILE *f = fopen("data/x_4542157392.th","rb");
-  if (!f) {
-  THError("cannot open file data/x_4542157392.th for reading");
-  }
-  long size;
-  size_t result = fread(&size,sizeof(long),1,f);
-  char *bytes = (char *) storage_x_4542157392->data;
-  uint64_t remaining = sizeof(float) * storage_x_4542157392->size;
-  result = fread(bytes,sizeof(float),storage_x_4542157392->size,f);
-  fclose(f);
-  }
-  THLongStorage *size_x_4542157392 = THLongStorage_newWithSize4(20,10,5,5);
-  THLongStorage *stride_x_4542157392 = THLongStorage_newWithSize4(250,25,5,1);
-  THFloatTensor *x_4542157392 = THFloatTensor_newWithStorage(storage_x_4542157392,0,size_x_4542157392,stride_x_4542157392);
-  THLongStorage_free(size_x_4542157392);
-  THLongStorage_free(stride_x_4542157392);
-  THFloatStorage *storage_x_4542157288 = THFloatStorage_newWithSize1(10);
-  {
-  FILE *f = fopen("data/x_4542157288.th","rb");
-  if (!f) {
-  THError("cannot open file data/x_4542157288.th for reading");
-  }
-  long size;
-  size_t result = fread(&size,sizeof(long),1,f);
-  char *bytes = (char *) storage_x_4542157288->data;
-  uint64_t remaining = sizeof(float) * storage_x_4542157288->size;
-  result = fread(bytes,sizeof(float),storage_x_4542157288->size,f);
-  fclose(f);
-  }
-  THLongStorage *size_x_4542157288 = THLongStorage_newWithSize1(10);
-  THLongStorage *stride_x_4542157288 = THLongStorage_newWithSize1(1);
-  THFloatTensor *x_4542157288 = THFloatTensor_newWithStorage(storage_x_4542157288,0,size_x_4542157288,stride_x_4542157288);
-  THLongStorage_free(size_x_4542157288);
-  THLongStorage_free(stride_x_4542157288);
-  THFloatStorage *storage_x_4542157184 = THFloatStorage_newWithSize1(250);
-  {
-  FILE *f = fopen("data/x_4542157184.th","rb");
-  if (!f) {
-  THError("cannot open file data/x_4542157184.th for reading");
-  }
-  long size;
-  size_t result = fread(&size,sizeof(long),1,f);
-  char *bytes = (char *) storage_x_4542157184->data;
-  uint64_t remaining = sizeof(float) * storage_x_4542157184->size;
-  result = fread(bytes,sizeof(float),storage_x_4542157184->size,f);
-  fclose(f);
-  }
-  THLongStorage *size_x_4542157184 = THLongStorage_newWithSize4(10,1,5,5);
-  THLongStorage *stride_x_4542157184 = THLongStorage_newWithSize4(25,25,5,1);
-  THFloatTensor *x_4542157184 = THFloatTensor_newWithStorage(storage_x_4542157184,0,size_x_4542157184,stride_x_4542157184);
-  THLongStorage_free(size_x_4542157184);
-  THLongStorage_free(stride_x_4542157184);
-  THFloatTensor *x_4541828592 = THFloatTensor_new();
-  THFloatTensor *finput_x_4541828592 = THFloatTensor_new();
-  THFloatTensor *fgradInput_x_4541828592 = THFloatTensor_new();
-  THNN_FloatSpatialConvolutionMM_updateOutput(NULL,x_4542158016,x_4541828592,x_4542157184,x_4542157288,finput_x_4541828592,fgradInput_x_4541828592,5,5,1,1,0,0);
-  THLongStorage *storage_indices_x_4541828896 = THLongStorage_newWithMapping("data/indices_x_4541828896.th",0,0);
-  THLongStorage *indices_size_x_4541828896 = THLongStorage_newWithSize4(1,10,12,12);
-  THLongStorage *indices_stride_x_4541828896 = THLongStorage_newWithSize4(1440,144,12,1);
-  THLongTensor *indices_x_4541828896 = THLongTensor_newWithStorage(storage_indices_x_4541828896,0,indices_size_x_4541828896,indices_stride_x_4541828896);
-  THLongStorage_free(indices_size_x_4541828896);
-  THLongStorage_free(indices_stride_x_4541828896);
-  THFloatTensor *x_4541828896 = THFloatTensor_new();
-  THNN_FloatSpatialMaxPooling_updateOutput(NULL,x_4541828592,x_4541828896,indices_x_4541828896,2,2,1,1,0,0,0);
-  THFloatTensor *x_4543012936 = THFloatTensor_new();
-  THNN_FloatThreshold_updateOutput(NULL,x_4541828896,x_4543012936,0,0,0);
-  THFloatTensor *x_4543013088 = THFloatTensor_new();
-  THFloatTensor *finput_x_4543013088 = THFloatTensor_new();
-  THFloatTensor *fgradInput_x_4543013088 = THFloatTensor_new();
-  THNN_FloatSpatialConvolutionMM_updateOutput(NULL,x_4543012936,x_4543013088,x_4542157392,x_4542157496,finput_x_4543013088,fgradInput_x_4543013088,5,5,1,1,0,0);
-  THFloatTensor *x_4543013240 = x_4543013088;
-  THLongStorage *storage_indices_x_4543013392 = THLongStorage_newWithMapping("data/indices_x_4543013392.th",0,0);
-  THLongStorage *indices_size_x_4543013392 = THLongStorage_newWithSize4(1,20,4,4);
-  THLongStorage *indices_stride_x_4543013392 = THLongStorage_newWithSize4(320,16,4,1);
-  THLongTensor *indices_x_4543013392 = THLongTensor_newWithStorage(storage_indices_x_4543013392,0,indices_size_x_4543013392,indices_stride_x_4543013392);
-  THLongStorage_free(indices_size_x_4543013392);
-  THLongStorage_free(indices_stride_x_4543013392);
-  THFloatTensor *x_4543013392 = THFloatTensor_new();
-  THNN_FloatSpatialMaxPooling_updateOutput(NULL,x_4543013240,x_4543013392,indices_x_4543013392,2,2,1,1,0,0,0);
-  THFloatTensor *x_4543013544 = THFloatTensor_new();
-  THNN_FloatThreshold_updateOutput(NULL,x_4543013392,x_4543013544,0,0,0);
-  THFloatStorage *storage_x_4543013696 = THFloatTensor_storage(x_4543013544);
-  THLongStorage *size_x_4543013696 = THLongStorage_newWithSize2(1,320);
-  THLongStorage *stride_x_4543013696 = NULL;
-  THFloatTensor *x_4543013696 = THFloatTensor_newWithStorage(storage_x_4543013696,0,size_x_4543013696,stride_x_4543013696);
-  THLongStorage_free(size_x_4543013696);
-  THFloatTensor *x_4543013848 = THFloatTensor_new();
-  THFloatTensor *addBuffer_x_4543013848 = THFloatTensor_new();
-  THNN_FloatLinear_updateOutput(NULL,x_4543013696,x_4543013848,x_4542157600,x_4542157704,addBuffer_x_4543013848);
-  THFloatTensor *x_4543014000 = THFloatTensor_new();
-  THNN_FloatThreshold_updateOutput(NULL,x_4543013848,x_4543014000,0,0,0);
-  THFloatTensor *x_4543014152 = x_4543014000;
-  THFloatTensor *x_4543014304 = THFloatTensor_new();
-  THFloatTensor *addBuffer_x_4543014304 = THFloatTensor_new();
-  THNN_FloatLinear_updateOutput(NULL,x_4543014152,x_4543014304,x_4542157808,x_4542157912,addBuffer_x_4543014304);
-  THFloatTensor *x_4543014456 = THFloatTensor_new();
-  THNN_FloatThreshold_updateOutput(NULL,x_4543014304,x_4543014456,0,0,0);
-  THFloatTensor *x_4543014608 = THFloatTensor_new();
-  THNN_FloatLogSoftMax_updateOutput(NULL,x_4543014456,x_4543014608);
-  THFloatTensor_copy(x_4542160720,x_4543014608);
-  THFloatTensor_free(x_4543014608);
-  THFloatTensor_free(x_4543014456);
-  THFloatTensor_free(x_4543014304);
-  THFloatTensor_free(addBuffer_x_4543014304);
-  THFloatTensor_free(x_4543014000);
-  THFloatTensor_free(x_4543013848);
-  THFloatTensor_free(addBuffer_x_4543013848);
-  THFloatTensor_free(x_4543013696);
-  THFloatTensor_free(x_4543013544);
-  THFloatTensor_free(x_4543013392);
-  THLongTensor_free(indices_x_4543013392);
-  THLongStorage_free(storage_indices_x_4543013392);
-  THFloatTensor_free(x_4543013088);
-  THFloatTensor_free(finput_x_4543013088);
-  THFloatTensor_free(fgradInput_x_4543013088);
-  THFloatTensor_free(x_4543012936);
-  THFloatTensor_free(x_4541828896);
-  THLongTensor_free(indices_x_4541828896);
-  THLongStorage_free(storage_indices_x_4541828896);
-  THFloatTensor_free(x_4541828592);
-  THFloatTensor_free(finput_x_4541828592);
-  THFloatTensor_free(fgradInput_x_4541828592);
-  THFloatTensor_free(x_4542157184);
-  THFloatStorage_free(storage_x_4542157184);
-  THFloatTensor_free(x_4542157288);
-  THFloatStorage_free(storage_x_4542157288);
-  THFloatTensor_free(x_4542157392);
-  THFloatStorage_free(storage_x_4542157392);
-  THFloatTensor_free(x_4542157496);
-  THFloatStorage_free(storage_x_4542157496);
-  THFloatTensor_free(x_4542157600);
-  THFloatStorage_free(storage_x_4542157600);
-  THFloatTensor_free(x_4542157704);
-  THFloatStorage_free(storage_x_4542157704);
-  THFloatTensor_free(x_4542157808);
-  THFloatStorage_free(storage_x_4542157808);
-  THFloatTensor_free(x_4542157912);
-  THFloatStorage_free(storage_x_4542157912);
+  THLongStorage *size_x_4510941568 = THLongStorage_newWithSize2(20,10);
+  THLongStorage *stride_x_4510941568 = THLongStorage_newWithSize2(10,1);
+  THFloatTensor *x_4510941568 = THFloatTensor_newWithStorage(storage_x_4510941568,0,size_x_4510941568,stride_x_4510941568);
+  THLongStorage_free(size_x_4510941568);
+  THLongStorage_free(stride_x_4510941568);
+  THFloatTensor *x_4510617224 = THFloatTensor_new();
+  THFloatTensor *addBuffer_x_4510617224 = THFloatTensor_new();
+  THNN_FloatLinear_updateOutput(NULL,x_4510941984,x_4510617224,x_4510941568,x_4510941672,addBuffer_x_4510617224);
+  THFloatTensor *x_4510961736 = THFloatTensor_new();
+  THNN_FloatThreshold_updateOutput(NULL,x_4510617224,x_4510961736,0,0,0);
+  THFloatTensor *x_4510961888 = THFloatTensor_new();
+  THFloatTensor *addBuffer_x_4510961888 = THFloatTensor_new();
+  THNN_FloatLinear_updateOutput(NULL,x_4510961736,x_4510961888,x_4510941776,x_4510941880,addBuffer_x_4510961888);
+  THFloatTensor *x_4510962040 = THFloatTensor_new();
+  THNN_FloatLogSoftMax_updateOutput(NULL,x_4510961888,x_4510962040);
+  THFloatTensor_copy(x_4510944688,x_4510962040);
+  THFloatTensor_free(x_4510962040);
+  THFloatTensor_free(x_4510961888);
+  THFloatTensor_free(addBuffer_x_4510961888);
+  THFloatTensor_free(x_4510961736);
+  THFloatTensor_free(x_4510617224);
+  THFloatTensor_free(addBuffer_x_4510617224);
+  THFloatTensor_free(x_4510941568);
+  THFloatStorage_free(storage_x_4510941568);
+  THFloatTensor_free(x_4510941672);
+  THFloatStorage_free(storage_x_4510941672);
+  THFloatTensor_free(x_4510941776);
+  THFloatStorage_free(storage_x_4510941776);
+  THFloatTensor_free(x_4510941880);
+  THFloatStorage_free(storage_x_4510941880);
 }
 #endif
 ```
