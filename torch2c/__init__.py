@@ -78,15 +78,15 @@ def _generate_test(nodes, out, fnname, filename, out_path):
     includes = '#include "%s"' % filename
     fndecl = 'int main(int argc, char *argv[])'
     calls = [el.generate_call(out_path,'data') for el in var_nodes + [out_baseline_node, out_node]]
-    # TODO: test equality of out
     fncall = '%s(%s);' % (fnname,
                     ', '.join([el.id_var_name() for el in var_nodes + [out_node]]))
     equal_var = '%s_equal_%s' % (out_node.id_var_name(), out_baseline_node.id_var_name())
     equal = out_node.generate_equal(equal_var,out_baseline_node.id_var_name())
+    print_equal = 'printf("Test passed: %d\\n",' + equal_var + ');'
     frees = [el.generate_free() for el in var_nodes + [out_baseline_node, out_node]]
     ret = 'return %s ? EXIT_SUCCESS : EXIT_FAILURE;' % equal_var
     indent = ' ' * 2
-    lines = [indent + el for el in '\n'.join(calls + [fncall, equal] + frees + [ret]).split('\n') if el]
+    lines = [indent + el for el in '\n'.join(calls + [fncall, equal, print_equal] + frees + [ret]).split('\n') if el]
     lines = [includes, fndecl, '{'] + lines + ['}']
     return '\n'.join(lines)
 

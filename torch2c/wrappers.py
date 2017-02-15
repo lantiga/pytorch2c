@@ -201,7 +201,7 @@ def read_storage(storage_name,size,filepath,numtype):
       'T': numtype
     }
     tpl = '''
-      TH${T}Storage *${storage_name} = TH${T}Storage_newWithSize1(${size});
+      TH${T}Storage *${storage_name} = TH${T}Storage_newWithSize(${size});
       {
         FILE *f = fopen("${filepath}","rb");
         if (!f) {
