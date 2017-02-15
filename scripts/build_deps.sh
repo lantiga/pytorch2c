@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 BASE_DIR=`pwd`
-DEPS_DIR=$BASE_DIR/deps
-DEPS_BUILD_DIR=$BASE_DIR/deps-build
-INSTALL_DIR=$BASE_DIR/install
+DEPS_DIR=$BASE_DIR/tmp/deps
+DEPS_BUILD_DIR=$BASE_DIR/tmp/deps-build
+INSTALL_DIR=$BASE_DIR/tmp/install
 
 mkdir -p $DEPS_BUILD_DIR/TH-build
 cd $DEPS_BUILD_DIR/TH-build

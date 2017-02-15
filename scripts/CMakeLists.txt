@@ -1,13 +1,12 @@
-project(foo)
+cmake_minimum_required(VERSION 3.0)
 
-set(SRCS mnist_forward_test.c)
+project(torch2ctest)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/install/include/TH)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/install/include/THNN)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${INSTALL_DIR}/include/TH)
+include_directories(${INSTALL_DIR}/include/THNN)
 
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/install/lib)
+link_directories(${INSTALL_DIR}/lib)
 
-add_executable(mnist_forward_test ${SRCS})
-target_link_libraries(mnist_forward_test TH THNN)
+add_executable(${EXECUTABLE} ${SRC})
+target_link_libraries(${EXECUTABLE} TH THNN)
 

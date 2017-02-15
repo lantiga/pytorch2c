@@ -10,11 +10,17 @@ def feedforward_test():
     import torch.nn as nn
     import torch.nn.functional as F
 
-    fc = nn.Linear(10,2)
+    fc1 = nn.Linear(10,20)
+    fc1.weight.data.normal_(0.0,1.0)
+    fc1.bias.data.normal_(0.0,1.0)
 
-    model = fc
-    data = Variable(torch.FloatTensor(1,10))
-    print(model(data))
+    fc2 = nn.Linear(20,2)
+    fc2.weight.data.normal_(0.0,1.0)
+    fc2.bias.data.normal_(0.0,1.0)
+
+    model = lambda x: F.log_softmax(fc2(F.relu(fc1(x))))
+
+    data = Variable(torch.rand(10,10))
 
     out_path = 'out'
     if not os.path.isdir(out_path):

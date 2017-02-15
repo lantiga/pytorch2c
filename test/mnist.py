@@ -13,7 +13,6 @@ def mnist_test():
         def __init__(self):
             super(Net, self).__init__()
             self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
-            #self.fc1 = nn.Linear(120, 50)
             self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
             self.conv2_drop = nn.Dropout2d()
             self.fc1 = nn.Linear(320, 50)
@@ -30,12 +29,12 @@ def mnist_test():
             return F.log_softmax(x)
     
     model = Net()
-    data = Variable(torch.FloatTensor(1,1,28,28))
+    data = Variable(torch.rand(1,1,28,28))
     out_path = 'out'
     if not os.path.isdir(out_path):
         os.mkdir(out_path)
     uid = str(uuid.uuid4())
-    torch2c.compile(model(data),'mnist_forward',os.path.join(out_path,uid),compile_test=True)
+    torch2c.compile(model(data),'mnist',os.path.join(out_path,uid),compile_test=True)
  
 
 if __name__=='__main__':
