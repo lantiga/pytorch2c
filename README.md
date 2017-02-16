@@ -25,7 +25,7 @@ Clone the repository and `cd pytorch2c`. Then run the following scripts to downl
 sh scripts/get_deps.sh
 sh scripts/build_deps.sh
 ```
-Now you can execute tests with `sh scripts/run_test.sh [test-name]`, where `test-name` is the name of the file in the `test` directory, e.g.
+Now you can execute tests with `sh scripts/run_test.sh [test-name]`, where `test-name` is the name of the corresponding Python script in the `test` directory, e.g.
 ```
 sh scripts/run_test.sh feedforward
 sh scripts/run_test.sh mnist
