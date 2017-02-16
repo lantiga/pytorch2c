@@ -7,8 +7,9 @@ PyTorch2c inspects the computation graph and emits C code that performs the same
 Caveats: 
 * things are not working just yet (the feedforward test does, the mnist test doesn't);
 * things are guaranteed to change in the PyTorch graph dept. Hopefully we'll be able to catch up with the changes as they happen.
+* I'm developing on macOS and Python 3.5 at the moment
 
-Feel free to get in touch, just to say hi or let me know you're horrified.
+Feel free to get in touch, just say hi or let me know you're horrified.
 
 ## TODO
 
@@ -19,14 +20,21 @@ Feel free to get in touch, just to say hi or let me know you're horrified.
 
 ## Trying things out
 
-* Clone the repository and `cd pytorch2c`
-* `sh scripts/get_deps.sh`
-* `sh scripts/build_deps.sh`
-* `sh scripts/run_test.sh feedforward`
+Clone the repository and `cd pytorch2c`. Then run the following scripts to download PyTorch and build TH and THNN:
+```
+sh scripts/get_deps.sh
+sh scripts/build_deps.sh
+```
+Now you can execute tests with `sh scripts/run_test.sh [test-name]`, where `test-name` is the name of the file in the `test` directory, e.g.
+```
+sh scripts/run_test.sh feedforward
+sh scripts/run_test.sh mnist
+```
+Tests return `1` if the value of the output tensor from the compiled code matches the value of the output tensor computed from PyTorch while compiling.
 
-To see the output, look into the `out` directory.
+To see the compiled files, look into the `out` directory.
 
-BTW, I'm developing on macOS and Python 3.5. 
+## Example
 
 Example on a simple feedforward network:
 ```python
