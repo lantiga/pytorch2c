@@ -1,6 +1,6 @@
 # pytorch2c
 
-A Python module for compiling (static) PyTorch graphs to C (relying on TH and THNN). 
+A Python module for compiling (static) [PyTorch](http://pytorch.org) graphs to C (relying on TH and THNN). 
 
 PyTorch2c inspects the computation graph and emits C code that performs the same computation. As long as a network is static (i.e. the graph doesn't change dynamically) it should produce a C source file that links to TH and THNN and can be compiled stand-alone. Interestingly, compiled graphs can be tested automatically by comparing what PyTorch produces to what the compiled code produces, given the same input.
 
@@ -20,7 +20,7 @@ Feel free to get in touch, just say hi or let me know you're horrified.
 
 ## Trying things out
 
-Clone the repository and `cd pytorch2c`. Then run the following scripts to download PyTorch and build TH and THNN:
+Install [PyTorch](http://pytorch.org), clone this repository and `cd pytorch2c`. Then run the following scripts to download PyTorch and build TH and THNN:
 ```
 sh scripts/get_deps.sh
 sh scripts/build_deps.sh
