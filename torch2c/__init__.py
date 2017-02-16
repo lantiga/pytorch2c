@@ -75,6 +75,7 @@ def _generate_test(nodes, out, fnname, filename, out_path):
     var_nodes = [_to_persisted(el) for el in nodes if type(el) == wrappers.Variable]
     out_node = _to_persisted(_wrap_out_node(nodes,out))
     out_baseline_node = _to_persisted(_wrap_out_node(nodes,_clone_var(out)))
+    out_node.obj.data.zero_()
     includes = '#include "%s"' % filename
     fndecl = 'int main(int argc, char *argv[])'
     calls = [el.generate_call(out_path,'data') for el in var_nodes + [out_baseline_node, out_node]]

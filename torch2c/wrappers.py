@@ -2,19 +2,6 @@ from string import Template
 import os
 import torch
 
-
-# TODO
-# - Create stub CMakeLists.txt
-# - Write automated test infrastructure:
-#   a. Network with random input
-#   b. Forward from Python
-#   c. Generate C + test fn body with expected result
-#   d. Compile and run, compare result
-# - Organize code
-# - Write more example networks
-# - Implement layers and tensor functions
-# - Put on github
-
 type_map = {
   'Float': 'float',
   'Double': 'double',
@@ -192,16 +179,16 @@ def persist_tensor(tensor, name, out_path, datadir, size_name='size_$id', stride
 
 # TODO: add this function to an auxiliary file
 # call it something like TH${T}Storage_newFromFile(filename);
-def read_storage(storage_name,size,filepath,numtype):
+def read_storage(storage_name,filepath,numtype):
     subs = {
       'filepath': filepath,
       'storage_name': storage_name,
       'real': type_map[numtype],
-      'size': size,
       'T': numtype
     }
+    # TODO: extend past little endian
     tpl = '''
-      TH${T}Storage *${storage_name} = TH${T}Storage_newWithSize(${size});
+      TH${T}Storage *${storage_name};
       {
         FILE *f = fopen("${filepath}","rb");
         if (!f) {
@@ -209,43 +196,13 @@ def read_storage(storage_name,size,filepath,numtype):
         }
         long size;
         size_t result = fread(&size,sizeof(long),1,f);
+        ${storage_name} = TH${T}Storage_newWithSize(size);
         char *bytes = (char *) ${storage_name}->data;
         uint64_t remaining = sizeof(${real}) * ${storage_name}->size;
         result = fread(bytes,sizeof(${real}),${storage_name}->size,f);
         fclose(f);
       }
     '''
-    #tpl = '''
-    #  TH${T}Storage *${storage_name} = NULL;
-    #  {
-    #    int fd = open("${filepath}","r+b");
-    #    if (!fd) {
-    #      THError("cannot open file ${filepath} for reading");
-    #    }
-    #    int ret;
-    #    long size;
-    #    ssize_t result = read(fd, &size, sizeof(long))
-    #    if (result < 0) {
-    #      THError("cannot read from file ${filepath}");
-    #    }
-    #    ${storage_name} = TH${T}Storage_newWithSize1(size);
-    #    ${real} *data = ${storage_name}->data;
-
-    #    // TODO: extend past little endian
-
-    #    char *bytes = (char *) data;
-    #    uint64_t remaining = sizeof(${real}) * ${storage_name}->size;
-    #    while (remaining > 0) {
-    #      ssize_t result = read(fd, bytes, remaining);
-    #      if (result < 0) {
-    #        THError("cannot read from file ${filepath}");
-    #      }
-    #      bytes += result;
-    #      remaining -= result;
-    #    }
-    #    fclose(fd);
-    #  }
-    #  '''
     return Template(tpl).substitute(subs)
 
 class PersistedVariable(Variable):
@@ -256,10 +213,9 @@ class PersistedVariable(Variable):
     def call_tpl(self):
         filepath, meta, meta_free = persist_tensor(self.obj.data,self.id_var_name(),
                                                    self.out_path,self.datadir)
-        storage_size = self.obj.nelement()
 
         return '\n'.join([
-            read_storage('storage_$id',storage_size,filepath,self.numtype), 
+            read_storage('storage_$id',filepath,self.numtype), 
             meta,
             'TH${T}Tensor *$id = TH${T}Tensor_newWithStorage(storage_$id,0,size_$id,stride_$id);',
             meta_free
@@ -418,32 +374,25 @@ class MaxPool2d(Wrapper):
         })
         self.infer_type_var = 'input'
         self.def_args({
-            'kw': obj.stride[0],
-            'kh': obj.stride[1],
-            'dw': obj.dilation[0],
-            'dh': obj.dilation[1],
+            'kw': obj.kernel_size[0],
+            'kh': obj.kernel_size[1],
+            'dw': obj.stride[0],
+            'dh': obj.stride[1],
             'pw': obj.padding[0],
             'ph': obj.padding[1],
             'ceil_mode': int(obj.ceil_mode)
         })
 
     def call_tpl(self):
-        filepath, meta, meta_free = persist_tensor(self.obj.indices,'indices_%s'%self.id_var_name(),self.out_path,self.datadir,
-                       'indices_size_$id','indices_stride_$id')
         return '''
-            THLongStorage *storage_indices_$id = THLongStorage_newWithMapping("%s",0,0);
-            %s
-            THLongTensor *indices_$id = THLongTensor_newWithStorage(storage_indices_$id,0,indices_size_$id,indices_stride_$id);
-            %s
+            THLongTensor *indices_$id = THLongTensor_new();
             TH${T}Tensor *$id = TH${T}Tensor_new();
             THNN_${T}SpatialMaxPooling_updateOutput(NULL,$input,$id,indices_$id,$kw,$kh,$dw,$dh,$pw,$ph,$ceil_mode);
-            ''' % (filepath, meta, meta_free)
-
+            '''
     def free_tpl(self):
         return '''
             TH${T}Tensor_free($id);
             THLongTensor_free(indices_$id);
-            THLongStorage_free(storage_indices_$id);
             '''
 
 register(MaxPool2d, torch.nn._functions.thnn.pooling.MaxPool2d)
