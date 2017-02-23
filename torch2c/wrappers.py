@@ -340,20 +340,14 @@ class View(Wrapper):
         Wrapper.__init__(self, obj, prevfns)
         self.def_vars({'input': id(prevfns[0])})
         self.infer_type_var = 'input'
-        nelement = 1
-        for el in obj.input_size:
-            nelement *= el
-        self.output_size = torch.tensor._infer_sizes(obj.sizes,nelement)
 
     def call_tpl(self):
 
-        dim = len(self.output_size)
-        meta, meta_free = tensor_meta_tpl('size_$id','stride_$id',self.output_size)
+        meta, meta_free = tensor_meta_tpl('size_$id','storage_$id',self.obj.sizes)
 
         return '''
-            TH${T}Storage *storage_$id = TH${T}Tensor_storage($input);
             %s
-            TH${T}Tensor *$id = TH${T}Tensor_newWithStorage(storage_$id,0,size_$id,stride_$id);
+            TH${T}Tensor *$id = TH${T}Tensor_newView($input,size_$id);
             %s
             ''' % (meta, meta_free)
 

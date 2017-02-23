@@ -67,8 +67,10 @@ def _to_persisted(var_node):
     return persisted
 
 def _clone_var(var):
-    out = var.clone()
-    out.creator = var.creator
+    out = Variable(data=var.data.clone(),
+                   creator=var.creator,
+                   requires_grad=var.requires_grad,
+                   volatile=var.volatile)
     return out
 
 def _generate_test(nodes, out, fnname, filename, out_path):
