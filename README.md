@@ -9,6 +9,8 @@ Caveats:
 * in these initial phases there are lots of layers and operations missing (help is very welcome)
 * I'm developing on macOS and Python 3.5 at the moment
 
+**Caveat**: work is underway to make things work with 0.1.9 (it works on 0.1.8 right now)
+
 Feel free to get in touch, just say hi or let me know you're horrified.
 
 ## TODO
