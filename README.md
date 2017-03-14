@@ -8,7 +8,7 @@ Caveats:
 * things are guaranteed to change in the PyTorch graph dept. Hopefully we'll be able to catch up with the changes as they happen.
 * in these initial phases there are lots of layers and operations missing (help is very welcome)
 * I'm developing on macOS and Python 3.5 at the moment
-* PyTorch2c currently supports PyTorch version 0.1.9
+* PyTorch2c currently supports PyTorch version 0.1.10
 
 Feel free to get in touch, just say hi or let me know you're horrified.
 
