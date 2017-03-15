@@ -446,8 +446,8 @@ class ConvNd(Wrapper):
             })
 
     def call_tpl(self):
-        # NOTE: use thnn_class_name, or replicate torch/nn/_functions/conv.py:125 thnn_class_name?
-        #print(obj.thnn_class_name(prevfns[0]))
+        # NOTE: use thnn_class_name, or replicate torch/nn/_functions/conv.py thnn_class_name
+        # TODO: handle dilated convolution and transposed convolution cases
         if self.ndim == 1:
             return '''
                 TH${T}Tensor *$id = TH${T}Tensor_new();
@@ -462,6 +462,10 @@ class ConvNd(Wrapper):
                 '''
         elif self.ndim == 3:
             return '''
+                TH${T}Tensor *$id = TH${T}Tensor_new();
+                TH${T}Tensor *finput_$id = TH${T}Tensor_new();
+                TH${T}Tensor *fgradInput_$id = TH${T}Tensor_new();
+                THNN_${T}VolumetricConvolutionMM_updateOutput(NULL,$input,$id,$weight,$bias,finput_$id,$kt,$kw,$kh,$dt,$dw,$dh,$pt,$pw,$ph);
                 '''
 
     def free_tpl(self):
@@ -477,6 +481,8 @@ class ConvNd(Wrapper):
                 '''
         elif self.ndim == 3:
             return '''
+                TH${T}Tensor_free($id);
+                TH${T}Tensor_free(finput_$id);
                 '''
 
 register(ConvNd, torch.nn._functions.conv.ConvNd)
