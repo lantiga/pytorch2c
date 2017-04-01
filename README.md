@@ -10,7 +10,7 @@ Caveats:
 * I'm developing on macOS and Python 3.5 at the moment
 * PyTorch2c currently supports PyTorch version 0.1.10
 
-Feel free to get in touch, just say hi or let me know you're horrified.
+**NOTE: autograd is currently being refactored in PyTorch. Work on this project will resume as soon as things settle down.**
 
 ## TODO
 
