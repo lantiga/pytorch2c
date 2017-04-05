@@ -332,6 +332,50 @@ class SubConstant(Emitter):
 register(SubConstant, torch.autograd._functions.basic_ops.SubConstant)
 
 
+class Mul(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({'input0': id(prevfns[0]),
+                       'input1': id(prevfns[1])})
+        self.infer_type_var = 'input0'
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            TH${T}Tensor_cmul($id,$input0,$input1);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(Mul, torch.autograd._functions.basic_ops.Mul)
+
+
+class MulConstant(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({'input': id(prevfns[0])})
+        self.infer_type_var = 'input'
+        self.def_args({'constant': obj.constant})
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            TH${T}Tensor_mul($id,$input,$constant);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(MulConstant, torch.autograd._functions.basic_ops.MulConstant)
+
+
 class Softmax(Emitter):
 
     def __init__(self, obj, prevfns):

@@ -30,7 +30,7 @@ def base_test():
 
     data = Variable(torch.rand(10,10))
 
-    out = model_0(data) + model_1(data) - model_2(data) + model_3(data) + 1 - 2
+    out = model_0(data) + model_1(data) * model_2(data) + 2.0 * model_3(data) + 1 - 2.0
 
     out_path = 'out'
     if not os.path.isdir(out_path):
