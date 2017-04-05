@@ -37,7 +37,7 @@ def base_test():
     model6 = lambda x: fc3(F.max_pool2d(x.unsqueeze(dim=0),2).squeeze())
     model7 = lambda x: fc3(F.max_pool2d(x.unsqueeze(dim=0),2).squeeze(dim=0))
     model8 = lambda x: fc3(F.max_pool3d(x.unsqueeze(0),2).squeeze())
-    model9 = lambda x: fc3(F.max_pool1d(x.view(1,1,-1),4).squeeze().view(10,10))
+    model9 = lambda x: fc3(F.max_pool1d(x.abs().view(1,1,-1),4).squeeze().view(10,10))
 
     data = Variable(torch.rand(10,10))
     data2 = Variable(torch.rand(20,20))
