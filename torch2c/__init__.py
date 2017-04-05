@@ -10,7 +10,7 @@ def _wrap(obj, prevfns=[]):
     return emitters._class_map[obj.__class__](obj,prevfns)
 
 
-def _traverse_graph_recursive(out, id_set, el):
+def _traverse_graph_recursive(out, el):
     if isinstance(el, Variable):
         var = _wrap(el)
     else:
@@ -18,20 +18,28 @@ def _traverse_graph_recursive(out, id_set, el):
         if hasattr(el,'previous_functions'):
             prevfns = [f[0] for f in el.previous_functions]
         var = _wrap(el,prevfns)
-    var_name = var.id_var_name()
-    if var_name not in id_set:
-        out.append(var)
-        id_set.add(var_name)
+    out.append(var)
     if hasattr(el, 'previous_functions'):
         for u in el.previous_functions:
-            _traverse_graph_recursive(out,id_set,u[0])
+            _traverse_graph_recursive(out,u[0])
+
+
+def _dedup_nodes(nodes):
+    id_set = set()
+    dedup_nodes = []
+    for el in nodes:
+        var_name = el.id_var_name()
+        if var_name not in id_set:
+            id_set.add(var_name)
+            dedup_nodes.append(el)
+    return dedup_nodes
 
 
 def _traverse_graph(node):
     nodes = []
-    id_set = set()
-    _traverse_graph_recursive(nodes,id_set,node.creator)
+    _traverse_graph_recursive(nodes,node.creator)
     nodes.reverse()
+    nodes = _dedup_nodes(nodes)
     var_dict = dict([(el.id,el) for el in nodes])
     prev_none_count = 0
     while True:
