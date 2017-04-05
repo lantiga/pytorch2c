@@ -40,8 +40,8 @@ def _wrap_out_node(nodes, out):
     return out_node
 
 
-def _generate_c(nodes, out, fnname, out_path):
-    # TODO: generate three functions
+def _emit_c(nodes, out, fnname, out_path):
+    # TODO: emit three functions
     # 1. load parameters (gen name from fnname)
     # 2. run forward
     # 3. free parameters (gen name from fnname)
@@ -54,12 +54,14 @@ def _generate_c(nodes, out, fnname, out_path):
     endif = '#endif'
     includes = '#include "TH.h"\n#include "THNN.h"\n#include "torch2c.h"'
     fndecl = 'void %s(%s)' % (fnname, 
-              ', '.join([el.generate_decl() for el in var_nodes + [out_node]]))
-    calls = [el.generate_call(out_path,'data') for el in nodes]
-    copy_out = out_node.generate_copy(last_node.id_var_name())
+              ', '.join([el.emit_decl() for el in var_nodes + [out_node]]))
+    print(fndecl)
+    calls = [el.emit_call(out_path,'data') for el in nodes]
+    print('\n'.join(calls))
+    copy_out = out_node.emit_copy(last_node.id_var_name())
     # TODO: be smarter re: frees
     # analyze calls backwards and free right after last use
-    frees = [el.generate_free() for el in nodes]
+    frees = [el.emit_free() for el in nodes]
     frees.reverse()
     indent = ' ' * 2
     lines = [indent + el for el in '\n'.join(calls + [copy_out] + frees).split('\n') if el]
@@ -81,20 +83,20 @@ def _clone_var(var):
     return out
 
 
-def _generate_test(nodes, out, fnname, filename, out_path):
+def _emit_test(nodes, out, fnname, filename, out_path):
     var_nodes = [_to_persisted(el) for el in nodes if type(el) == emitters.Variable]
     out_node = _to_persisted(_wrap_out_node(nodes,out))
     out_baseline_node = _to_persisted(_wrap_out_node(nodes,_clone_var(out)))
     out_node.obj.data.zero_()
     includes = '#include "%s"' % filename
     fndecl = 'int main(int argc, char *argv[])'
-    calls = [el.generate_call(out_path,'data') for el in var_nodes + [out_baseline_node, out_node]]
+    calls = [el.emit_call(out_path,'data') for el in var_nodes + [out_baseline_node, out_node]]
     fncall = '%s(%s);' % (fnname,
                     ', '.join([el.id_var_name() for el in var_nodes + [out_node]]))
     equal_var = '%s_equal_%s' % (out_node.id_var_name(), out_baseline_node.id_var_name())
-    equal = out_node.generate_equal(equal_var,out_baseline_node.id_var_name())
+    equal = out_node.emit_equal(equal_var,out_baseline_node.id_var_name())
     print_equal = 'printf("Test passed: %d\\n",' + equal_var + ');'
-    frees = [el.generate_free() for el in var_nodes + [out_baseline_node, out_node]]
+    frees = [el.emit_free() for el in var_nodes + [out_baseline_node, out_node]]
     ret = 'return %s ? EXIT_SUCCESS : EXIT_FAILURE;' % equal_var
     indent = ' ' * 2
     lines = [indent + el for el in '\n'.join(calls + [fncall, equal, print_equal] + frees + [ret]).split('\n') if el]
@@ -111,12 +113,12 @@ def compile(node, fnname, out_path, compile_test=False):
     if not os.path.isdir(data_path):
         os.mkdir(data_path)
     filename = "%s.h" % fnname
-    src = _generate_c(nodes,node,fnname,out_path)
+    src = _emit_c(nodes,node,fnname,out_path)
     with open(os.path.join(out_path,filename),'w') as f:
         f.write(src)
     if compile_test:
         test_filename = "%s_test.c" % fnname
-        test_src = _generate_test(nodes,node,fnname,filename,out_path)
+        test_src = _emit_test(nodes,node,fnname,filename,out_path)
         with open(os.path.join(out_path,test_filename),'w') as f:
             f.write(test_src)
  

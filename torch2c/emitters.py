@@ -64,7 +64,7 @@ class Emitter(object):
         if not self.numtype:
             raise Exception('numtype not defined for this object')
 
-    def generate_c(self, tpl):
+    def emit_c(self, tpl):
         self.check_numtype()
         subs = self.var_names()
         subs.update(self.args)
@@ -72,31 +72,31 @@ class Emitter(object):
         return '\n'.join([el.strip() for el in 
             Template(tpl).substitute(subs).split('\n') if el.strip()])
 
-    def generate_call(self, out_path, datadir):
+    def emit_call(self, out_path, datadir):
         self.out_path = out_path
         self.datadir = datadir
-        return self.generate_c(self.call_tpl())
+        return self.emit_c(self.call_tpl())
 
-    def generate_free(self):
-        return self.generate_c(self.free_tpl())
+    def emit_free(self):
+        return self.emit_c(self.free_tpl())
 
-    def generate_type(self):
+    def emit_type(self):
         self.check_numtype()
         return 'TH%sTensor' % self.numtype
 
-    def generate_decl(self):
+    def emit_decl(self):
         self.check_numtype()
         return 'TH%sTensor *%s' % (self.numtype, self.id_var_name())
 
-    def generate_retain(self):
+    def emit_retain(self):
         self.check_numtype()
         return 'TH%sTensor_retain(%s);' % (self.numtype, self.id_var_name())
 
-    def generate_copy(self, src_id_var_name):
+    def emit_copy(self, src_id_var_name):
         self.check_numtype()
         return 'TH%sTensor_copy(%s,%s);' % (self.numtype, self.id_var_name(), src_id_var_name)
 
-    def generate_equal(self, equal_var_name, src_id_var_name):
+    def emit_equal(self, equal_var_name, src_id_var_name):
         self.check_numtype()
         return 'int %s = TH%sTensor_equal(%s,%s);' % (equal_var_name, self.numtype, self.id_var_name(), src_id_var_name)
 
