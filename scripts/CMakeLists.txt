@@ -4,6 +4,7 @@ project(torch2ctest)
 
 include_directories(${INSTALL_DIR}/include/TH)
 include_directories(${INSTALL_DIR}/include/THNN)
+include_directories(${INSTALL_DIR}/include/torch2c)
 
 link_directories(${INSTALL_DIR}/lib)
 

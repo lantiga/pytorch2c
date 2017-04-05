@@ -180,35 +180,6 @@ def persist_tensor(tensor, name, out_path, datadir, size_name='size_$id', stride
     return os.path.join(datadir,filename), meta, meta_free
 
 
-# TODO: add this function to an auxiliary file
-# call it something like TH${T}Storage_newFromFile(filename);
-def read_storage(storage_name,filepath,numtype):
-    subs = {
-      'filepath': filepath,
-      'storage_name': storage_name,
-      'real': type_map[numtype],
-      'T': numtype
-    }
-    # TODO: extend past little endian
-    tpl = '''
-      TH${T}Storage *${storage_name};
-      {
-        FILE *f = fopen("${filepath}","rb");
-        if (!f) {
-          THError("cannot open file ${filepath} for reading");
-        }
-        long size;
-        size_t result = fread(&size,sizeof(long),1,f);
-        ${storage_name} = TH${T}Storage_newWithSize(size);
-        char *bytes = (char *) ${storage_name}->data;
-        uint64_t remaining = sizeof(${real}) * ${storage_name}->size;
-        result = fread(bytes,sizeof(${real}),${storage_name}->size,f);
-        fclose(f);
-      }
-    '''
-    return Template(tpl).substitute(subs)
-
-
 class PersistedVariable(Variable):
 
     def __init__(self, obj, prevfns):
@@ -219,7 +190,7 @@ class PersistedVariable(Variable):
                                                    self.out_path,self.datadir)
 
         return '\n'.join([
-            read_storage('storage_$id',filepath,self.numtype), 
+            'TH${T}Storage *storage_$id = TH${T}Storage_newFromFile("%s");' % filepath,
             meta,
             'TH${T}Tensor *$id = TH${T}Tensor_newWithStorage(storage_$id,0,size_$id,stride_$id);',
             meta_free

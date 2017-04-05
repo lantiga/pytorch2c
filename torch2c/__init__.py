@@ -52,7 +52,7 @@ def _generate_c(nodes, out, fnname, out_path):
     last_node = nodes[-1]
     ifndef = '#ifndef __%s__\n#define __%s__\n' % (2*(fnname.upper(),))
     endif = '#endif'
-    includes = '#include "TH.h"\n#include "THNN.h"\n'
+    includes = '#include "TH.h"\n#include "THNN.h"\n#include "torch2c.h"'
     fndecl = 'void %s(%s)' % (fnname, 
               ', '.join([el.generate_decl() for el in var_nodes + [out_node]]))
     calls = [el.generate_call(out_path,'data') for el in nodes]
@@ -103,6 +103,7 @@ def _generate_test(nodes, out, fnname, filename, out_path):
 
 
 def compile(node, fnname, out_path, compile_test=False):
+    includedir = os.path.join(os.path.dirname(__file__),'..','include')
     nodes = _traverse_graph(node)
     if not os.path.isdir(out_path):
         os.mkdir(out_path)

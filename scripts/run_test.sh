@@ -11,6 +11,9 @@ INSTALL_DIR=$BASE_DIR/tmp/install
 OUT_BASE_DIR=$BASE_DIR/out
 OUT_BUILD_DIR=$BASE_DIR/tmp/out-build
 
+mkdir -p $INSTALL_DIR/include/torch2c
+cp $BASE_DIR/include/*.h $INSTALL_DIR/include/torch2c
+
 rm -rf $OUT_BASE_DIR
 rm -rf $OUT_BUILD_DIR
 python3 test/$1.py
