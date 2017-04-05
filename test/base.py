@@ -32,10 +32,11 @@ def base_test():
     model_2 = lambda x: F.softmax(F.tanh(fc3(x)))
     model_3 = lambda x: F.softmax(F.sigmoid(fc3(x)))
     model_4 = lambda x: F.softmax(F.leaky_relu(fc4(x)))
+    model_5 = lambda x: F.softmax(F.logsigmoid(fc4(x)))
 
     data = Variable(torch.rand(10,10))
 
-    out = model_0(data) + model_1(data) * model_2(data) / model_3(data) / 2.0 + 2.0 * model_4(data) + 1 - 2.0
+    out = model_0(data) + model_1(data) * model_2(data) / model_3(data) / 2.0 + 2.0 * model_4(data) + model_5(data) + 1 - 2.0
 
     out_path = 'out'
     if not os.path.isdir(out_path):

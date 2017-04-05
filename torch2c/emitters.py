@@ -590,6 +590,31 @@ class Sigmoid(Emitter):
 register(Sigmoid, torch.autograd._functions.pointwise.Sigmoid)
 
 
+class LogSigmoid(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({
+            'input': id(prevfns[0]),
+        })
+        self.infer_type_var = 'input'
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            TH${T}Tensor *buffer_$id = TH${T}Tensor_new();
+            THNN_${T}LogSigmoid_updateOutput(NULL,$input,$id,buffer_$id);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            TH${T}Tensor_free(buffer_$id);
+            '''
+
+register(LogSigmoid, torch.nn._functions.thnn.auto.LogSigmoid)
+
+
 class Noop(Emitter):
 
     def __init__(self, obj, prevfns):
