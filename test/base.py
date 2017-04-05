@@ -32,7 +32,7 @@ def base_test():
     model1 = lambda x: F.softmax(F.elu(fc3(x)))
     model2 = lambda x: F.softmax(F.tanh(fc3(x)))
     model3 = lambda x: F.softmax(F.sigmoid(fc3(x)))
-    model4 = lambda x: softmax(F.leaky_relu(fc4(x)))
+    model4 = lambda x: softmax(F.leaky_relu(fc4(x))).clone()
     model5 = lambda x: softmax(F.logsigmoid(fc4(x.transpose(0,1))))
     model6 = lambda x: fc3(F.max_pool2d(x.unsqueeze(dim=0),2).squeeze())
     model7 = lambda x: fc3(F.max_pool2d(x.unsqueeze(dim=0),2).squeeze(dim=0))

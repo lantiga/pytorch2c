@@ -663,6 +663,28 @@ class Abs(Emitter):
 register(Abs, torch.autograd._functions.pointwise.Abs)
 
 
+class Clone(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({
+            'input': id(prevfns[0]),
+        })
+        self.infer_type_var = 'input'
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_newClone($input);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(Clone, torch.autograd._functions.tensor.Clone)
+
+
 class Sigmoid(Emitter):
 
     def __init__(self, obj, prevfns):
