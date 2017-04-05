@@ -709,6 +709,38 @@ class View(Emitter):
 register(View, torch.autograd._functions.tensor.View)
 
 
+class MaxPool1d(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({
+            'input': id(prevfns[0])
+        })
+        self.infer_type_var = 'input'
+        self.def_args({
+            'kw': obj.kernel_size,
+            'dw': obj.stride,
+            'pw': obj.pad,
+            'lw': obj.dilation,
+            'ceil_mode': int(obj.ceil_mode)
+        })
+
+    def call_tpl(self):
+        return '''
+            THLongTensor *indices_$id = THLongTensor_new();
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            THNN_${T}SpatialDilatedMaxPooling_updateOutput(NULL,$input,$id,indices_$id,$kw,1,$dw,1,$pw,0,$lw,1,$ceil_mode);
+            '''
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            THLongTensor_free(indices_$id);
+            '''
+
+register(MaxPool1d, torch.nn._functions.thnn.pooling.MaxPool1d)
+
+
+
 class MaxPool2d(Emitter):
 
     def __init__(self, obj, prevfns):
@@ -724,6 +756,8 @@ class MaxPool2d(Emitter):
             'dh': obj.stride[1],
             'pw': obj.padding[0],
             'ph': obj.padding[1],
+            'lw': obj.dilation[0],
+            'lh': obj.dilation[1],
             'ceil_mode': int(obj.ceil_mode)
         })
 
@@ -731,8 +765,9 @@ class MaxPool2d(Emitter):
         return '''
             THLongTensor *indices_$id = THLongTensor_new();
             TH${T}Tensor *$id = TH${T}Tensor_new();
-            THNN_${T}SpatialMaxPooling_updateOutput(NULL,$input,$id,indices_$id,$kw,$kh,$dw,$dh,$pw,$ph,$ceil_mode);
+            THNN_${T}SpatialDilatedMaxPooling_updateOutput(NULL,$input,$id,indices_$id,$kw,$kh,$dw,$dh,$pw,$ph,$lw,$lh,$ceil_mode);
             '''
+
     def free_tpl(self):
         return '''
             TH${T}Tensor_free($id);
@@ -760,6 +795,9 @@ class MaxPool3d(Emitter):
             'pt': obj.padding[0],
             'pw': obj.padding[1],
             'ph': obj.padding[2],
+            'lt': obj.dilation[0],
+            'lw': obj.dilation[1],
+            'lh': obj.dilation[2],
             'ceil_mode': int(obj.ceil_mode)
         })
 
@@ -767,8 +805,9 @@ class MaxPool3d(Emitter):
         return '''
             THLongTensor *indices_$id = THLongTensor_new();
             TH${T}Tensor *$id = TH${T}Tensor_new();
-            THNN_${T}VolumetricMaxPooling_updateOutput(NULL,$input,$id,indices_$id,$kt,$kw,$kh,$dt,$dw,$dh,$pt,$pw,$ph,$ceil_mode);
+            THNN_${T}VolumetricDilatedMaxPooling_updateOutput(NULL,$input,$id,indices_$id,$kt,$kw,$kh,$dt,$dw,$dh,$pt,$pw,$ph,$lt,$lw,$lh,$ceil_mode);
             '''
+
     def free_tpl(self):
         return '''
             TH${T}Tensor_free($id);
