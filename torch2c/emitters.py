@@ -266,6 +266,28 @@ class Add(Emitter):
 register(Add, torch.autograd._functions.basic_ops.Add)
 
 
+class AddConstant(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        print(obj.constant)
+        self.def_vars({'input': id(prevfns[0])})
+        self.infer_type_var = 'input'
+        self.def_args({'constant': obj.constant})
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            TH${T}Tensor_add($id,$input,$constant);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(AddConstant, torch.autograd._functions.basic_ops.AddConstant)
+
 
 
 class Softmax(Emitter):
