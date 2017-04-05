@@ -264,6 +264,29 @@ class Unsqueeze(Emitter):
 register(Unsqueeze, torch.autograd._functions.tensor.Unsqueeze)
 
 
+class Transpose(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({'input': id(prevfns[0])})
+        self.infer_type_var = 'input'
+        self.def_args({'dim0': obj.dims[0],
+                       'dim1': obj.dims[1]})
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            TH${T}Tensor_transpose($id,$input,$dim0,$dim1);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(Transpose, torch.autograd._functions.tensor.Transpose)
+
+
 class Linear(Emitter):
 
     def __init__(self, obj, prevfns):
