@@ -270,7 +270,6 @@ class AddConstant(Emitter):
 
     def __init__(self, obj, prevfns):
         Emitter.__init__(self, obj, prevfns)
-        print(obj.constant)
         self.def_vars({'input': id(prevfns[0])})
         self.infer_type_var = 'input'
         self.def_args({'constant': obj.constant})
@@ -358,6 +357,33 @@ class Threshold(Emitter):
             '''
 
 register(Threshold, torch.nn._functions.thnn.auto.Threshold)
+
+
+class ELU(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({
+            'input': id(prevfns[0]),
+        })
+        self.infer_type_var = 'input'
+        self.def_args({
+            'alpha': obj.additional_args[0],
+            'inplace': int(obj.additional_args[1])
+        })
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            THNN_${T}ELU_updateOutput(NULL,$input,$id,$alpha,$inplace);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(ELU, torch.nn._functions.thnn.auto.ELU)
 
 
 class Noop(Emitter):

@@ -24,7 +24,7 @@ def base_test():
     fc3.weight.data.normal_(0.0,1.0)
     fc3.bias.data.normal_(0.0,1.0)
 
-    model_1 = lambda x: F.softmax(F.relu(fc3(x)))
+    model_1 = lambda x: F.softmax(F.elu(fc3(x)))
 
     data = Variable(torch.rand(10,10))
 
