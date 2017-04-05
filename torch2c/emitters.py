@@ -429,6 +429,29 @@ class ELU(Emitter):
 register(ELU, torch.nn._functions.thnn.auto.ELU)
 
 
+class Tanh(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({
+            'input': id(prevfns[0]),
+        })
+        self.infer_type_var = 'input'
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            THNN_${T}Tanh_updateOutput(NULL,$input,$id);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(Tanh, torch.autograd._functions.pointwise.Tanh)
+
+
 class Noop(Emitter):
 
     def __init__(self, obj, prevfns):
