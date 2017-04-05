@@ -214,6 +214,28 @@ class Parameter(PersistedVariable):
 register(Parameter, torch.nn.parameter.Parameter)
 
 
+class Squeeze(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({'input': id(prevfns[0])})
+        self.infer_type_var = 'input'
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            TH${T}Tensor_squeeze($id,$input);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(Squeeze, torch.autograd._functions.tensor.Squeeze)
+
+
+
 class Linear(Emitter):
 
     def __init__(self, obj, prevfns):

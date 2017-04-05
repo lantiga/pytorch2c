@@ -28,15 +28,20 @@ def base_test():
     fc4.weight.data.normal_(0.0,1.0)
     fc4.bias.data.normal_(0.0,1.0)
 
+    softmax = nn.Softmax()
+
     model_1 = lambda x: F.softmax(F.elu(fc3(x)))
     model_2 = lambda x: F.softmax(F.tanh(fc3(x)))
     model_3 = lambda x: F.softmax(F.sigmoid(fc3(x)))
-    model_4 = lambda x: F.softmax(F.leaky_relu(fc4(x)))
-    model_5 = lambda x: F.softmax(F.logsigmoid(fc4(x)))
+    model_4 = lambda x: softmax(F.leaky_relu(fc4(x)))
+    model_5 = lambda x: softmax(F.logsigmoid(fc4(x)))
+
+    model_6 = lambda x: fc3(F.max_pool2d(x,2).squeeze())
 
     data = Variable(torch.rand(10,10))
+    data2 = Variable(torch.rand(1,20,20))
 
-    out = model_0(data) + model_1(data) * model_2(data) / model_3(data) / 2.0 + 2.0 * model_4(data) + model_5(data) + 1 - 2.0
+    out = model_0(data) + model_1(data) * model_2(data) / model_3(data) / 2.0 + 2.0 * model_4(data) + model_5(data) + 1 - 2.0 + model_6(data2)
 
     out_path = 'out'
     if not os.path.isdir(out_path):
