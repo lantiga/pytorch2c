@@ -26,10 +26,11 @@ def base_test():
 
     model_1 = lambda x: F.softmax(F.elu(fc3(x)))
     model_2 = lambda x: F.softmax(F.tanh(fc3(x)))
+    model_3 = lambda x: F.softmax(F.sigmoid(fc3(x)))
 
     data = Variable(torch.rand(10,10))
 
-    out = model_0(data) + model_1(data) - model_2(data) + 1 - 2
+    out = model_0(data) + model_1(data) - model_2(data) + model_3(data) + 1 - 2
 
     out_path = 'out'
     if not os.path.isdir(out_path):
