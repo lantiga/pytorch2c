@@ -54,6 +54,9 @@ class Emitter(object):
     def var_names(self):
         return {k: self.var_name(v) for k,v in self.vars.items()}
 
+    def persisted_vars(self):
+        return []
+
     def call_tpl(self):
         return ''
 
@@ -239,6 +242,51 @@ class Linear(Emitter):
             '''
 
 register(Linear, torch.nn._functions.linear.Linear)
+
+
+class Add(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({'input0': id(prevfns[0]),
+                       'input1': id(prevfns[1])})
+        self.infer_type_var = 'input0'
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            TH${T}Tensor_cadd($id,$input0,1.0,$input1);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(Add, torch.autograd._functions.basic_ops.Add)
+
+
+
+
+class Softmax(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({'input': id(prevfns[0])})
+        self.infer_type_var = 'input'
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            THNN_${T}SoftMax_updateOutput(NULL,$input,$id);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(Softmax, torch.nn._functions.thnn.auto.Softmax)
 
 
 class LogSoftmax(Emitter):

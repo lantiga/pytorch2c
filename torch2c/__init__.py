@@ -5,10 +5,12 @@ from . import emitters
 
 
 def _wrap(obj, prevfns=[]):
+    if obj.__class__ not in emitters._class_map:
+        raise Exception('%s does not have an Emitter' % obj.__class__)
     return emitters._class_map[obj.__class__](obj,prevfns)
 
 
-def _traverse_graph_recursive(out, el):
+def _traverse_graph_recursive(out, id_set, el):
     if isinstance(el, Variable):
         var = _wrap(el)
     else:
@@ -16,19 +18,31 @@ def _traverse_graph_recursive(out, el):
         if hasattr(el,'previous_functions'):
             prevfns = [f[0] for f in el.previous_functions]
         var = _wrap(el,prevfns)
-    out.append(var)
+    var_name = var.id_var_name()
+    if var_name not in id_set:
+        out.append(var)
+        id_set.add(var_name)
     if hasattr(el, 'previous_functions'):
         for u in el.previous_functions:
-            _traverse_graph_recursive(out,u[0])
+            _traverse_graph_recursive(out,id_set,u[0])
 
 
 def _traverse_graph(node):
     nodes = []
-    _traverse_graph_recursive(nodes,node.creator)
+    id_set = set()
+    _traverse_graph_recursive(nodes,id_set,node.creator)
     nodes.reverse()
     var_dict = dict([(el.id,el) for el in nodes])
-    for el in nodes:
-        el.infer_type(var_dict)
+    prev_none_count = 0
+    while True:
+        for el in nodes:
+            el.infer_type(var_dict)
+        none_count = len([el for el in nodes if el.numtype == None])
+        if none_count == 0:
+            break
+        if none_count == prev_none_count:
+            raise Exception('Cannot infer types for all nodes in the graphs')
+        prev_none_count = none_count
     return nodes
 
 
@@ -52,12 +66,10 @@ def _emit_c(nodes, out, fnname, out_path):
     last_node = nodes[-1]
     ifndef = '#ifndef __%s__\n#define __%s__\n' % (2*(fnname.upper(),))
     endif = '#endif'
-    includes = '#include "TH.h"\n#include "THNN.h"\n#include "torch2c.h"'
+    includes = '#include "TH.h"\n#include "THNN.h"\n#include "torch2c.h"\n'
     fndecl = 'void %s(%s)' % (fnname, 
               ', '.join([el.emit_decl() for el in var_nodes + [out_node]]))
-    print(fndecl)
     calls = [el.emit_call(out_path,'data') for el in nodes]
-    print('\n'.join(calls))
     copy_out = out_node.emit_copy(last_node.id_var_name())
     # TODO: be smarter re: frees
     # analyze calls backwards and free right after last use
