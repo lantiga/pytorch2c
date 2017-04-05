@@ -742,6 +742,42 @@ class MaxPool2d(Emitter):
 register(MaxPool2d, torch.nn._functions.thnn.pooling.MaxPool2d)
 
 
+class MaxPool3d(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({
+            'input': id(prevfns[0])
+        })
+        self.infer_type_var = 'input'
+        self.def_args({
+            'kt': obj.kernel_size[0],
+            'kw': obj.kernel_size[1],
+            'kh': obj.kernel_size[2],
+            'dt': obj.stride[0],
+            'dw': obj.stride[1],
+            'dh': obj.stride[2],
+            'pt': obj.padding[0],
+            'pw': obj.padding[1],
+            'ph': obj.padding[2],
+            'ceil_mode': int(obj.ceil_mode)
+        })
+
+    def call_tpl(self):
+        return '''
+            THLongTensor *indices_$id = THLongTensor_new();
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            THNN_${T}VolumetricMaxPooling_updateOutput(NULL,$input,$id,indices_$id,$kt,$kw,$kh,$dt,$dw,$dh,$pt,$pw,$ph,$ceil_mode);
+            '''
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            THLongTensor_free(indices_$id);
+            '''
+
+register(MaxPool3d, torch.nn._functions.thnn.pooling.MaxPool3d)
+
+
 class ConvNd(Emitter):
 
     def __init__(self, obj, prevfns):

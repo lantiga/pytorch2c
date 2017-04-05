@@ -38,14 +38,16 @@ def base_test():
 
     model_6 = lambda x: fc3(F.max_pool2d(x.unsqueeze(dim=0),2).squeeze())
     model_7 = lambda x: fc3(F.max_pool2d(x.unsqueeze(dim=0),2).squeeze(dim=0))
+    model_8 = lambda x: fc3(F.max_pool3d(x.unsqueeze(0),2).squeeze())
 
     data = Variable(torch.rand(10,10))
     data2 = Variable(torch.rand(20,20))
+    data3 = Variable(torch.rand(2,20,20))
 
     out = model_0(data) + \
           model_1(data) * model_2(data) / model_3(data) / 2.0 + \
           2.0 * model_4(data) + model_5(data) + 1 - 2.0 + \
-          model_6(data2) + model_7(data2)
+          model_6(data2) + model_7(data2) + model_8(data3)
 
     out_path = 'out'
     if not os.path.isdir(out_path):
