@@ -220,8 +220,15 @@ class Squeeze(Emitter):
         Emitter.__init__(self, obj, prevfns)
         self.def_vars({'input': id(prevfns[0])})
         self.infer_type_var = 'input'
+        self.def_args({'dim': obj.dim})
+        self.dim = obj.dim
 
     def call_tpl(self):
+        if self.dim != None:
+            return '''
+                TH${T}Tensor *$id = TH${T}Tensor_new();
+                TH${T}Tensor_squeeze1d($id,$input,$dim);
+                '''
         return '''
             TH${T}Tensor *$id = TH${T}Tensor_new();
             TH${T}Tensor_squeeze($id,$input);
@@ -234,6 +241,27 @@ class Squeeze(Emitter):
 
 register(Squeeze, torch.autograd._functions.tensor.Squeeze)
 
+
+class Unsqueeze(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({'input': id(prevfns[0])})
+        self.infer_type_var = 'input'
+        self.def_args({'dim': obj.dim})
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            TH${T}Tensor_unsqueeze1d($id,$input,$dim);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(Unsqueeze, torch.autograd._functions.tensor.Unsqueeze)
 
 
 class Linear(Emitter):
