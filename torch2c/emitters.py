@@ -14,11 +14,12 @@ type_map = {
 
 _class_map = {}
 
-def register(wrapperClass, torchClass):
-    _class_map[torchClass] = wrapperClass
+
+def register(emitterClass, torchClass):
+    _class_map[torchClass] = emitterClass
 
 
-class Wrapper(object):
+class Emitter(object):
 
     def __init__(self, obj, prevfns):
         self.id = id(obj)
@@ -148,19 +149,20 @@ def tensor_meta_tpl(size_name, stride_name, size, stride=None):
 
 
 #####################
-# Wrapper subclasses
+# Emitter subclasses
 #####################
 
 
-class Variable(Wrapper):
+class Variable(Emitter):
 
     def __init__(self, obj, prevfns):
-        Wrapper.__init__(self, obj, prevfns)
+        Emitter.__init__(self, obj, prevfns)
 
     def infer_type(self, var_dict):
         self.numtype = self.obj.data.__class__.__name__[:len('Tensor')-1]
 
 register(Variable, torch.autograd.Variable)
+
 
 def persist_tensor(tensor, name, out_path, datadir, size_name='size_$id', stride_name='stride_$id'):
     contiguous = tensor.contiguous()
@@ -176,6 +178,7 @@ def persist_tensor(tensor, name, out_path, datadir, size_name='size_$id', stride
     stride = contiguous.stride()
     meta, meta_free = tensor_meta_tpl(size_name,stride_name,size,stride)
     return os.path.join(datadir,filename), meta, meta_free
+
 
 # TODO: add this function to an auxiliary file
 # call it something like TH${T}Storage_newFromFile(filename);
@@ -205,6 +208,7 @@ def read_storage(storage_name,filepath,numtype):
     '''
     return Template(tpl).substitute(subs)
 
+
 class PersistedVariable(Variable):
 
     def __init__(self, obj, prevfns):
@@ -227,6 +231,7 @@ class PersistedVariable(Variable):
             TH${T}Storage_free(storage_$id);
             '''
 
+
 class Parameter(PersistedVariable):
 
     def __init__(self, obj, prevfns):
@@ -235,10 +240,10 @@ class Parameter(PersistedVariable):
 register(Parameter, torch.nn.parameter.Parameter)
 
 
-class Linear(Wrapper):
+class Linear(Emitter):
 
     def __init__(self, obj, prevfns):
-        Wrapper.__init__(self, obj, prevfns)
+        Emitter.__init__(self, obj, prevfns)
 
         try:
             input, weight, bias = [id(el) for el in prevfns]
@@ -262,14 +267,13 @@ class Linear(Wrapper):
             TH${T}Tensor_free(addBuffer_$id);
             '''
 
-
 register(Linear, torch.nn._functions.linear.Linear)
 
 
-class LogSoftmax(Wrapper):
+class LogSoftmax(Emitter):
 
     def __init__(self, obj, prevfns):
-        Wrapper.__init__(self, obj, prevfns)
+        Emitter.__init__(self, obj, prevfns)
         self.def_vars({'input': id(prevfns[0])})
         self.infer_type_var = 'input'
 
@@ -287,10 +291,10 @@ class LogSoftmax(Wrapper):
 register(LogSoftmax, torch.nn._functions.thnn.auto.LogSoftmax)
 
 
-class Threshold(Wrapper):
+class Threshold(Emitter):
 
     def __init__(self, obj, prevfns):
-        Wrapper.__init__(self, obj, prevfns)
+        Emitter.__init__(self, obj, prevfns)
         self.def_vars({
             'input': id(prevfns[0]),
         })
@@ -315,10 +319,10 @@ class Threshold(Wrapper):
 register(Threshold, torch.nn._functions.thnn.auto.Threshold)
 
 
-class Noop(Wrapper):
+class Noop(Emitter):
 
     def __init__(self, obj, prevfns):
-        Wrapper.__init__(self, obj, prevfns)
+        Emitter.__init__(self, obj, prevfns)
         self.def_vars({'input': id(prevfns[0])})
         self.infer_type_var = 'input'
 
@@ -334,10 +338,10 @@ register(Noop, torch.nn._functions.dropout.Dropout)
 register(Noop, torch.nn._functions.dropout.FeatureDropout)
 
 
-class View(Wrapper):
+class View(Emitter):
 
     def __init__(self, obj, prevfns):
-        Wrapper.__init__(self, obj, prevfns)
+        Emitter.__init__(self, obj, prevfns)
         self.def_vars({'input': id(prevfns[0])})
         self.infer_type_var = 'input'
 
@@ -359,10 +363,10 @@ class View(Wrapper):
 register(View, torch.autograd._functions.tensor.View)
 
 
-class MaxPool2d(Wrapper):
+class MaxPool2d(Emitter):
 
     def __init__(self, obj, prevfns):
-        Wrapper.__init__(self, obj, prevfns)
+        Emitter.__init__(self, obj, prevfns)
         self.def_vars({
             'input': id(prevfns[0])
         })
@@ -392,10 +396,10 @@ class MaxPool2d(Wrapper):
 register(MaxPool2d, torch.nn._functions.thnn.pooling.MaxPool2d)
 
 
-class ConvNd(Wrapper):
+class ConvNd(Emitter):
 
     def __init__(self, obj, prevfns):
-        Wrapper.__init__(self, obj, prevfns)
+        Emitter.__init__(self, obj, prevfns)
         self.def_vars({'input': id(prevfns[0]),
                        'weight': id(prevfns[1]),
                        'bias': id(prevfns[2])})

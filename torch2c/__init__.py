@@ -1,10 +1,12 @@
 import torch
 from torch.autograd import Variable
 import os
-from . import wrappers
+from . import emitters
+
 
 def _wrap(obj, prevfns=[]):
-    return wrappers._class_map[obj.__class__](obj,prevfns)
+    return emitters._class_map[obj.__class__](obj,prevfns)
+
 
 def _traverse_graph_recursive(out, el):
     if isinstance(el, Variable):
@@ -19,6 +21,7 @@ def _traverse_graph_recursive(out, el):
         for u in el.previous_functions:
             _traverse_graph_recursive(out,u[0])
 
+
 def _traverse_graph(node):
     nodes = []
     _traverse_graph_recursive(nodes,node.creator)
@@ -28,6 +31,7 @@ def _traverse_graph(node):
         el.infer_type(var_dict)
     return nodes
 
+
 def _wrap_out_node(nodes, out):
     out_node = _wrap(out)
     out_creator_id = id(out.creator)
@@ -35,13 +39,14 @@ def _wrap_out_node(nodes, out):
     out_node.infer_type({out_creator_id: out_creator_node})
     return out_node
 
+
 def _generate_c(nodes, out, fnname, out_path):
     # TODO: generate three functions
     # 1. load parameters (gen name from fnname)
     # 2. run forward
     # 3. free parameters (gen name from fnname)
     # to avoid loading from disk at each forward
-    var_nodes = [el for el in nodes if type(el) == wrappers.Variable]
+    var_nodes = [el for el in nodes if type(el) == emitters.Variable]
     out_node = _wrap_out_node(nodes,out)
     # TODO: make it more general re: last_node?
     last_node = nodes[-1]
@@ -61,10 +66,12 @@ def _generate_c(nodes, out, fnname, out_path):
     lines = [ifndef, includes, fndecl, '{'] + lines + ['}', endif]
     return '\n'.join(lines)
 
+
 def _to_persisted(var_node):
-    persisted = wrappers.PersistedVariable(var_node.obj,[])
+    persisted = emitters.PersistedVariable(var_node.obj,[])
     persisted.numtype = var_node.numtype
     return persisted
+
 
 def _clone_var(var):
     out = Variable(data=var.data.clone(),
@@ -73,8 +80,9 @@ def _clone_var(var):
                    volatile=var.volatile)
     return out
 
+
 def _generate_test(nodes, out, fnname, filename, out_path):
-    var_nodes = [_to_persisted(el) for el in nodes if type(el) == wrappers.Variable]
+    var_nodes = [_to_persisted(el) for el in nodes if type(el) == emitters.Variable]
     out_node = _to_persisted(_wrap_out_node(nodes,out))
     out_baseline_node = _to_persisted(_wrap_out_node(nodes,_clone_var(out)))
     out_node.obj.data.zero_()
@@ -93,6 +101,7 @@ def _generate_test(nodes, out, fnname, filename, out_path):
     lines = [includes, fndecl, '{'] + lines + ['}']
     return '\n'.join(lines)
 
+
 def compile(node, fnname, out_path, compile_test=False):
     nodes = _traverse_graph(node)
     if not os.path.isdir(out_path):
@@ -110,4 +119,3 @@ def compile(node, fnname, out_path, compile_test=False):
         with open(os.path.join(out_path,test_filename),'w') as f:
             f.write(test_src)
  
-
