@@ -517,6 +517,33 @@ class ELU(Emitter):
 register(ELU, torch.nn._functions.thnn.auto.ELU)
 
 
+class LeakyReLU(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        self.def_vars({
+            'input': id(prevfns[0]),
+        })
+        self.infer_type_var = 'input'
+        self.def_args({
+            'negval': obj.additional_args[0],
+            'inplace': int(obj.additional_args[1])
+        })
+
+    def call_tpl(self):
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            THNN_${T}LeakyReLU_updateOutput(NULL,$input,$id,$negval,$inplace);
+            '''
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(LeakyReLU, torch.nn._functions.thnn.auto.LeakyReLU)
+
+
 class Tanh(Emitter):
 
     def __init__(self, obj, prevfns):
