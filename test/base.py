@@ -38,15 +38,20 @@ def base_test():
     model7 = lambda x: fc3(F.max_pool2d(x.unsqueeze(dim=0),2).squeeze(dim=0))
     model8 = lambda x: fc3(F.max_pool3d(x.unsqueeze(0),2).squeeze())
     model9 = lambda x: fc3(F.max_pool1d(x.abs().view(1,1,-1),4).squeeze().view(10,10))
+    #model10 = lambda x: fc3(x.double())
+    #model10 = lambda x: fc3(x.view(1,10,10).select(0,0))
+    model10 = lambda x, y: F.softmax(F.tanh(fc3(torch.cat((x,y),1))))
 
     data = Variable(torch.rand(10,10))
     data2 = Variable(torch.rand(20,20))
+    data1a = Variable(torch.rand(10,5))
+    data1b = Variable(torch.rand(10,5))
     data3 = Variable(torch.rand(2,20,20))
 
     out = model0(data) + \
           model1(data) * model2(data) / model3(data) / 2.0 + \
           2.0 * model4(data) + model5(data) + 1 - 2.0 + \
-          model6(data2) + model7(data2) + model8(data3) + model9(data2)
+          model6(data2) + model7(data2) + model8(data3) + model9(data2) + model10(data1a,data1b)
 
     out_path = 'out'
     if not os.path.isdir(out_path):

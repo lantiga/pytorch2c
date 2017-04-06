@@ -685,6 +685,36 @@ class Clone(Emitter):
 register(Clone, torch.autograd._functions.tensor.Clone)
 
 
+class Concat(Emitter):
+
+    def __init__(self, obj, prevfns):
+        Emitter.__init__(self, obj, prevfns)
+        for i, el in enumerate(prevfns):
+            self.def_vars({'input%d' % i: id(el)})
+        self.ninputs = len(prevfns)
+        self.infer_type_var = 'input0'
+        self.def_args({
+            'dim': obj.dim,
+            'ninputs': self.ninputs
+        })
+
+    def call_tpl(self):
+        arraytpl = '\n'.join(['inputs[%d] = $input%d;' % (i,i) for i in range(self.ninputs)])
+        return '''
+            TH${T}Tensor *$id = TH${T}Tensor_new();
+            TH${T}Tensor *inputs[%d];
+            %s
+            TH${T}Tensor_catArray($id,inputs,$ninputs,$dim);
+            ''' % (self.ninputs, arraytpl)
+
+    def free_tpl(self):
+        return '''
+            TH${T}Tensor_free($id);
+            '''
+
+register(Concat, torch.autograd._functions.tensor.Concat)
+
+
 class Sigmoid(Emitter):
 
     def __init__(self, obj, prevfns):
