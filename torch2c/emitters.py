@@ -3,13 +3,13 @@ import os
 import torch
 
 type_map = {
-  'Float': 'float',
-  'Double': 'double',
-  'Byte': 'char',
-  'Char': 'char',
-  'Short': 'short',
-  'Long': 'long',
-  'Int': 'int'
+    'Float': 'float',
+    'Double': 'double',
+    'Byte': 'char',
+    'Char': 'char',
+    'Short': 'short',
+    'Long': 'long',
+    'Int': 'int'
 }
 
 _class_map = {}
@@ -29,11 +29,12 @@ class Emitter(object):
         self.numtype = None
         self.args = {}
         self.vars = {}
-        self.def_var('id',id(obj))
+        self.def_var('id', id(obj))
 
     def infer_type(self, var_dict):
         if not self.infer_type_var:
-            raise Exception('Cannot infer type: either define infer_type_var or override the infer_type method')
+            raise Exception(
+                'Cannot infer type: either define infer_type_var or override the infer_type method')
         self.numtype = var_dict[self.vars[self.infer_type_var]].numtype
 
     def def_var(self, k, var):
@@ -52,7 +53,7 @@ class Emitter(object):
         return self.var_name(self.id)
 
     def var_names(self):
-        return {k: self.var_name(v) for k,v in self.vars.items()}
+        return {k: self.var_name(v) for k, v in self.vars.items()}
 
     def persisted_vars(self):
         return []
@@ -72,8 +73,8 @@ class Emitter(object):
         subs = self.var_names()
         subs.update(self.args)
         subs['T'] = self.numtype
-        return '\n'.join([el.strip() for el in 
-            Template(tpl).substitute(subs).split('\n') if el.strip()])
+        return '\n'.join([el.strip() for el in
+                          Template(tpl).substitute(subs).split('\n') if el.strip()])
 
     def emit_call(self, out_path, datadir):
         self.out_path = out_path
@@ -109,36 +110,40 @@ def tensor_meta_tpl(size_name, stride_name, size, stride=None):
     dim = len(size)
 
     if dim == 1:
-        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize1(%d);' % (size_name,*size)
+        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize1(%d);' % (size_name, *size)
     elif dim == 2:
-        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize2(%d,%d);' % (size_name,*size)
+        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize2(%d,%d);' % (size_name, *size)
     elif dim == 3:
-        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize3(%d,%d,%d);' % (size_name,*size)
+        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize3(%d,%d,%d);' % (size_name, *size)
     elif dim == 4:
-        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize4(%d,%d,%d,%d);' % (size_name,*size)
+        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize4(%d,%d,%d,%d);' % (size_name, *size)
     else:
         meta_size_lines = []
-        meta_size_lines.append('THLongStorage *%s = THLongStorage_newWithSize(%d);' % (size_name,dim))
+        meta_size_lines.append(
+            'THLongStorage *%s = THLongStorage_newWithSize(%d);' % (size_name, dim))
         for i in range(dim):
-            meta_size_lines.append('THLongStorage_set(%s,%d,%d);' % (size_name,i,size[i]))
+            meta_size_lines.append(
+                'THLongStorage_set(%s,%d,%d);' % (size_name, i, size[i]))
         meta_size = '\n'.join(meta_size_lines)
 
     meta_size_free = 'THLongStorage_free(%s);' % size_name
 
     if stride:
         if dim == 1:
-            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize1(%d);' % (stride_name,*stride)
+            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize1(%d);' % (stride_name, *stride)
         elif dim == 2:
-            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize2(%d,%d);' % (stride_name,*stride)
+            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize2(%d,%d);' % (stride_name, *stride)
         elif dim == 3:
-            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize3(%d,%d,%d);' % (stride_name,*stride)
+            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize3(%d,%d,%d);' % (stride_name, *stride)
         elif dim == 4:
-            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize4(%d,%d,%d,%d);' % (stride_name,*stride)
+            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize4(%d,%d,%d,%d);' % (stride_name, *stride)
         else:
             meta_stride_lines = []
-            meta_stride_lines.append('THLongStorage *%s = THLongStorage_newWithSize(%d);' % (stride_name,dim))
+            meta_stride_lines.append(
+                'THLongStorage *%s = THLongStorage_newWithSize(%d);' % (stride_name, dim))
             for i in range(dim):
-                meta_stride_lines.append('THLongStorage_set(%s,%d,%d);' % (stride_name,i,stride[i]))
+                meta_stride_lines.append(
+                    'THLongStorage_set(%s,%d,%d);' % (stride_name, i, stride[i]))
             meta_stride = '\n'.join(meta_stride_lines)
         meta_stride_free = 'THLongStorage_free(%s);' % stride_name
     else:
@@ -162,7 +167,8 @@ class Variable(Emitter):
         Emitter.__init__(self, obj, prevfns)
 
     def infer_type(self, var_dict):
-        self.numtype = self.obj.data.__class__.__name__[:len('Tensor')-1]
+        self.numtype = self.obj.data.__class__.__name__[:len('Tensor') - 1]
+
 
 register(Variable, torch.autograd.Variable)
 
@@ -170,17 +176,17 @@ register(Variable, torch.autograd.Variable)
 def persist_tensor(tensor, name, out_path, datadir, size_name='size_$id', stride_name='stride_$id'):
     contiguous = tensor.contiguous()
     filename = '%s.th' % name
-    data_path = os.path.join(out_path,datadir)
+    data_path = os.path.join(out_path, datadir)
     if not os.path.isdir(data_path):
         os.mkdir(data_path)
-    with open(os.path.join(data_path,filename),'wb') as f:
+    with open(os.path.join(data_path, filename), 'wb') as f:
         contiguous.storage()._write_file(f)
 
     dim = contiguous.dim()
     size = contiguous.size()
     stride = contiguous.stride()
-    meta, meta_free = tensor_meta_tpl(size_name,stride_name,size,stride)
-    return os.path.join(datadir,filename), meta, meta_free
+    meta, meta_free = tensor_meta_tpl(size_name, stride_name, size, stride)
+    return os.path.join(datadir, filename), meta, meta_free
 
 
 class PersistedVariable(Variable):
@@ -189,8 +195,8 @@ class PersistedVariable(Variable):
         Variable.__init__(self, obj, prevfns)
 
     def call_tpl(self):
-        filepath, meta, meta_free = persist_tensor(self.obj.data,self.id_var_name(),
-                                                   self.out_path,self.datadir)
+        filepath, meta, meta_free = persist_tensor(self.obj.data, self.id_var_name(),
+                                                   self.out_path, self.datadir)
 
         return '\n'.join([
             'TH${T}Storage *storage_$id = TH${T}Storage_newFromFile("%s");' % filepath,
@@ -210,6 +216,7 @@ class Parameter(PersistedVariable):
 
     def __init__(self, obj, prevfns):
         PersistedVariable.__init__(self, obj, prevfns)
+
 
 register(Parameter, torch.nn.parameter.Parameter)
 
@@ -239,6 +246,7 @@ class Squeeze(Emitter):
             TH${T}Tensor_free($id);
             '''
 
+
 register(Squeeze, torch.autograd._functions.tensor.Squeeze)
 
 
@@ -260,6 +268,7 @@ class Unsqueeze(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(Unsqueeze, torch.autograd._functions.tensor.Unsqueeze)
 
@@ -283,6 +292,7 @@ class Transpose(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(Transpose, torch.autograd._functions.tensor.Transpose)
 
@@ -314,6 +324,7 @@ class Linear(Emitter):
             TH${T}Tensor_free(addBuffer_$id);
             '''
 
+
 register(Linear, torch.nn._functions.linear.Linear)
 
 
@@ -335,6 +346,7 @@ class Add(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(Add, torch.autograd._functions.basic_ops.Add)
 
@@ -358,6 +370,7 @@ class AddConstant(Emitter):
             TH${T}Tensor_free($id);
             '''
 
+
 register(AddConstant, torch.autograd._functions.basic_ops.AddConstant)
 
 
@@ -379,6 +392,7 @@ class Sub(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(Sub, torch.autograd._functions.basic_ops.Sub)
 
@@ -402,6 +416,7 @@ class SubConstant(Emitter):
             TH${T}Tensor_free($id);
             '''
 
+
 register(SubConstant, torch.autograd._functions.basic_ops.SubConstant)
 
 
@@ -423,6 +438,7 @@ class Mul(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(Mul, torch.autograd._functions.basic_ops.Mul)
 
@@ -446,6 +462,7 @@ class MulConstant(Emitter):
             TH${T}Tensor_free($id);
             '''
 
+
 register(MulConstant, torch.autograd._functions.basic_ops.MulConstant)
 
 
@@ -467,6 +484,7 @@ class Div(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(Div, torch.autograd._functions.basic_ops.Div)
 
@@ -490,6 +508,7 @@ class DivConstant(Emitter):
             TH${T}Tensor_free($id);
             '''
 
+
 register(DivConstant, torch.autograd._functions.basic_ops.DivConstant)
 
 
@@ -511,6 +530,7 @@ class Softmax(Emitter):
             TH${T}Tensor_free($id);
             '''
 
+
 register(Softmax, torch.nn._functions.thnn.auto.Softmax)
 
 
@@ -531,6 +551,7 @@ class LogSoftmax(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(LogSoftmax, torch.nn._functions.thnn.auto.LogSoftmax)
 
@@ -560,6 +581,7 @@ class Threshold(Emitter):
             TH${T}Tensor_free($id);
             '''
 
+
 register(Threshold, torch.nn._functions.thnn.auto.Threshold)
 
 
@@ -586,6 +608,7 @@ class ELU(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(ELU, torch.nn._functions.thnn.auto.ELU)
 
@@ -614,6 +637,7 @@ class LeakyReLU(Emitter):
             TH${T}Tensor_free($id);
             '''
 
+
 register(LeakyReLU, torch.nn._functions.thnn.auto.LeakyReLU)
 
 
@@ -636,6 +660,7 @@ class Tanh(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(Tanh, torch.autograd._functions.pointwise.Tanh)
 
@@ -660,6 +685,7 @@ class Abs(Emitter):
             TH${T}Tensor_free($id);
             '''
 
+
 register(Abs, torch.autograd._functions.pointwise.Abs)
 
 
@@ -682,6 +708,7 @@ class Clone(Emitter):
             TH${T}Tensor_free($id);
             '''
 
+
 register(Clone, torch.autograd._functions.tensor.Clone)
 
 
@@ -699,7 +726,8 @@ class Concat(Emitter):
         })
 
     def call_tpl(self):
-        arraytpl = '\n'.join(['inputs[%d] = $input%d;' % (i,i) for i in range(self.ninputs)])
+        arraytpl = '\n'.join(['inputs[%d] = $input%d;' % (i, i)
+                              for i in range(self.ninputs)])
         return '''
             TH${T}Tensor *$id = TH${T}Tensor_new();
             TH${T}Tensor *inputs[%d];
@@ -711,6 +739,7 @@ class Concat(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(Concat, torch.autograd._functions.tensor.Concat)
 
@@ -734,6 +763,7 @@ class Sigmoid(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(Sigmoid, torch.autograd._functions.pointwise.Sigmoid)
 
@@ -760,6 +790,7 @@ class LogSigmoid(Emitter):
             TH${T}Tensor_free(buffer_$id);
             '''
 
+
 register(LogSigmoid, torch.nn._functions.thnn.auto.LogSigmoid)
 
 
@@ -778,6 +809,7 @@ class Noop(Emitter):
     def free_tpl(self):
         return ''
 
+
 register(Noop, torch.nn._functions.dropout.Dropout)
 register(Noop, torch.nn._functions.dropout.FeatureDropout)
 
@@ -791,7 +823,8 @@ class View(Emitter):
 
     def call_tpl(self):
 
-        meta, meta_free = tensor_meta_tpl('size_$id','storage_$id',self.obj.sizes)
+        meta, meta_free = tensor_meta_tpl(
+            'size_$id', 'storage_$id', self.obj.sizes)
 
         return '''
             %s
@@ -803,6 +836,7 @@ class View(Emitter):
         return '''
             TH${T}Tensor_free($id);
             '''
+
 
 register(View, torch.autograd._functions.tensor.View)
 
@@ -829,14 +863,15 @@ class MaxPool1d(Emitter):
             TH${T}Tensor *$id = TH${T}Tensor_new();
             THNN_${T}SpatialDilatedMaxPooling_updateOutput(NULL,$input,$id,indices_$id,$kw,1,$dw,1,$pw,0,$lw,1,$ceil_mode);
             '''
+
     def free_tpl(self):
         return '''
             TH${T}Tensor_free($id);
             THLongTensor_free(indices_$id);
             '''
 
-register(MaxPool1d, torch.nn._functions.thnn.pooling.MaxPool1d)
 
+register(MaxPool1d, torch.nn._functions.thnn.pooling.MaxPool1d)
 
 
 class MaxPool2d(Emitter):
@@ -871,6 +906,7 @@ class MaxPool2d(Emitter):
             TH${T}Tensor_free($id);
             THLongTensor_free(indices_$id);
             '''
+
 
 register(MaxPool2d, torch.nn._functions.thnn.pooling.MaxPool2d)
 
@@ -912,6 +948,7 @@ class MaxPool3d(Emitter):
             THLongTensor_free(indices_$id);
             '''
 
+
 register(MaxPool3d, torch.nn._functions.thnn.pooling.MaxPool3d)
 
 
@@ -939,17 +976,17 @@ class ConvNd(Emitter):
         #nOutputPlane = weight.size(0)
         #outputHeight = (inputHeight + 2 * obj.padding[1] - obj.stride[1]) / obj.dilation[1] + 1
         #outputWidth = (inputWidth + 2 * obj.padding[0] - obj.stride[0]) / obj.dilation[0] + 1
-        #print(nInputPlane,inputHeight,inputWidth,nOutputPlane,outputHeight,outputWidth)
+        # print(nInputPlane,inputHeight,inputWidth,nOutputPlane,outputHeight,outputWidth)
 
         if self.ndim == 1:
             self.def_args({
-                'kw': obj.dilation[0] * (wsize[-1]-1) + 1,
+                'kw': obj.dilation[0] * (wsize[-1] - 1) + 1,
                 'dw': obj.stride[0]
             })
         elif self.ndim == 2:
             self.def_args({
-                'kw': obj.dilation[0] * (wsize[-2]-1) + 1,
-                'kh': obj.dilation[0] * (wsize[-1]-1) + 1,
+                'kw': obj.dilation[0] * (wsize[-2] - 1) + 1,
+                'kh': obj.dilation[0] * (wsize[-1] - 1) + 1,
                 'dw': obj.stride[0],
                 'dh': obj.stride[1],
                 'pw': obj.padding[0],
@@ -957,9 +994,9 @@ class ConvNd(Emitter):
             })
         elif self.ndim == 3:
             self.def_args({
-                'kt': obj.dilation[0] * (wsize[-3]-1) + 1,
-                'kw': obj.dilation[1] * (wsize[-2]-1) + 1,
-                'kh': obj.dilation[2] * (wsize[-1]-1) + 1,
+                'kt': obj.dilation[0] * (wsize[-3] - 1) + 1,
+                'kw': obj.dilation[1] * (wsize[-2] - 1) + 1,
+                'kh': obj.dilation[2] * (wsize[-1] - 1) + 1,
                 'dt': obj.stride[0],
                 'dw': obj.stride[1],
                 'dh': obj.stride[2],
@@ -1008,6 +1045,5 @@ class ConvNd(Emitter):
                 TH${T}Tensor_free(finput_$id);
                 '''
 
+
 register(ConvNd, torch.nn._functions.conv.ConvNd)
-
-
