@@ -110,13 +110,13 @@ def tensor_meta_tpl(size_name, stride_name, size, stride=None):
     dim = len(size)
 
     if dim == 1:
-        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize1(%d);' % (size_name, *size)
+        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize1(%d);' % (size_name,) + size
     elif dim == 2:
-        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize2(%d,%d);' % (size_name, *size)
+        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize2(%d,%d);' % (size_name,) + size
     elif dim == 3:
-        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize3(%d,%d,%d);' % (size_name, *size)
+        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize3(%d,%d,%d);' % (size_name,) + size
     elif dim == 4:
-        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize4(%d,%d,%d,%d);' % (size_name, *size)
+        meta_size = 'THLongStorage *%s = THLongStorage_newWithSize4(%d,%d,%d,%d);' % (size_name,) + size
     else:
         meta_size_lines = []
         meta_size_lines.append(
@@ -130,13 +130,13 @@ def tensor_meta_tpl(size_name, stride_name, size, stride=None):
 
     if stride:
         if dim == 1:
-            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize1(%d);' % (stride_name, *stride)
+            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize1(%d);' % (stride_name,) + stride
         elif dim == 2:
-            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize2(%d,%d);' % (stride_name, *stride)
+            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize2(%d,%d);' % (stride_name,) + stride
         elif dim == 3:
-            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize3(%d,%d,%d);' % (stride_name, *stride)
+            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize3(%d,%d,%d);' % (stride_name,) + stride
         elif dim == 4:
-            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize4(%d,%d,%d,%d);' % (stride_name, *stride)
+            meta_stride = 'THLongStorage *%s = THLongStorage_newWithSize4(%d,%d,%d,%d);' % (stride_name,) + stride
         else:
             meta_stride_lines = []
             meta_stride_lines.append(
