@@ -15,12 +15,12 @@ def _traverse_graph_recursive(out, el):
         var = _wrap(el)
     else:
         prevfns = []
-        if hasattr(el, 'previous_functions'):
-            prevfns = [f[0] for f in el.previous_functions]
+        if hasattr(el, 'next_functions'):
+            prevfns = [f[0] for f in el.next_functions]
         var = _wrap(el, prevfns)
     out.append(var)
-    if hasattr(el, 'previous_functions'):
-        for u in el.previous_functions:
+    if hasattr(el, 'next_functions'):
+        for u in el.next_functions:
             _traverse_graph_recursive(out, u[0])
 
 
@@ -37,7 +37,7 @@ def _dedup_nodes(nodes):
 
 def _traverse_graph(node):
     nodes = []
-    _traverse_graph_recursive(nodes, node.creator)
+    _traverse_graph_recursive(nodes, node.grad_fn)
     nodes.reverse()
     nodes = _dedup_nodes(nodes)
     var_dict = dict([(el.id, el) for el in nodes])
@@ -56,9 +56,9 @@ def _traverse_graph(node):
 
 def _wrap_out_node(nodes, out):
     out_node = _wrap(out)
-    out_creator_id = id(out.creator)
-    out_creator_node = [el for el in nodes if el.id == out_creator_id][0]
-    out_node.infer_type({out_creator_id: out_creator_node})
+    out_grad_fn_id = id(out.grad_fn)
+    out_grad_fn_node = [el for el in nodes if el.id == out_grad_fn_id][0]
+    out_node.infer_type({out_grad_fn_id: out_grad_fn_node})
     return out_node
 
 
@@ -98,7 +98,7 @@ def _to_persisted(var_node):
 
 def _clone_var(var):
     out = Variable(data=var.data.clone(),
-                   creator=var.creator,
+                   grad_fn=var.grad_fn,
                    requires_grad=var.requires_grad,
                    volatile=var.volatile)
     return out
