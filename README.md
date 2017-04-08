@@ -10,14 +10,14 @@ Caveats:
 * I'm developing on macOS and Python 3.5 at the moment
 * PyTorch2c currently supports PyTorch version 0.1.10
 
-**NOTE: autograd is currently being refactored in PyTorch. Work on this project will resume as soon as things settle down.**
+**NOTE: autograd is currently being refactored in PyTorch: this project is of limited utility until the autograd branch in PyTorch is merged**
 
 ## TODO
 
 * [x] Solve storage serialization issues
 * [ ] Complete testing infrastructure (generate a number of input-output pairs)
 * [x] Generate CMakeLists.txt as part of output for tests
-* [ ] Implement wrappers for the complete API (big one)
+* [-] Implement wrappers for the complete API (in progress)
 
 ## Trying things out
 
@@ -28,8 +28,9 @@ sh scripts/build_deps.sh
 ```
 Now you can execute tests with `sh scripts/run_test.sh [test-name]`, where `test-name` is the name of the corresponding Python script in the `test` directory, e.g.
 ```
+sh scripts/run_test.sh base
 sh scripts/run_test.sh feedforward
-sh scripts/run_test.sh mnist
+sh scripts/run_test.sh mnist # currently broken due to PyTorch being in flux (issue with ConvNdBackward not being inspectable)
 ```
 Tests return `1` if the value of the output tensor from the compiled code matches the value of the output tensor computed from PyTorch while compiling.
 
