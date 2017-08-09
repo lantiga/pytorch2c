@@ -1,5 +1,7 @@
 # pytorch2c
 
+**NOTE: this project is currently under being reworked; instead of graph traversal, it will be based on the new tracing functionality being implemented in PyTorch as of 0.2.0+ **
+
 A Python module for compiling (static) [PyTorch](http://pytorch.org) graphs to C (relying on TH and THNN). 
 
 PyTorch2c inspects the computation graph and emits C code that performs the same computation. As long as a network is static (i.e. the graph doesn't change dynamically) it should produce a C source file that links to TH and THNN and can be compiled stand-alone. Interestingly, compiled graphs can be tested automatically by comparing what PyTorch produces to what the compiled code produces, given the same input.
@@ -9,8 +11,6 @@ Caveats:
 * in these initial phases there are lots of layers and operations missing (help is very welcome)
 * I'm developing on macOS and Python 3.5 at the moment
 * PyTorch2c currently supports PyTorch version 0.1.10
-
-**NOTE: autograd is currently being refactored in PyTorch: this project is of limited utility until the autograd branch in PyTorch is merged**
 
 ## TODO
 
