@@ -1,6 +1,6 @@
 # pytorch2c
 
-**NOTE: this project is currently under being reworked; instead of graph traversal, it will be based on the new tracing functionality being implemented in PyTorch as of 0.2.0. This will allow cleaner code, more compact emitted code and proper handling of recurrent models.**
+**NOTE: this project is currently under being reworked; instead of graph traversal, it will be based on the new tracing functionality being implemented in PyTorch after 0.2.0. This will allow cleaner code, more compact emitted code and proper handling of recurrent models.**
 
 A Python module for compiling (static) [PyTorch](http://pytorch.org) graphs to C (relying on TH and THNN). 
 
